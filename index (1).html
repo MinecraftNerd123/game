@@ -1,0 +1,4641 @@
+<!DOCTYPE html>
+<!--
+Created using JS Bin
+http://jsbin.com
+
+Copyright (c) 2025 by anonymous (http://jsbin.com/rikujozome/1/edit)
+
+Released under the MIT license: http://jsbin.mit-license.org
+-->
+<meta name="robots" content="noindex">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Smash Bros</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+    overflow: hidden;
+    user-select: none;
+}
+
+.game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+
+/* Character Selection Screen */
+.character-select {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 10px;
+}
+
+.select-title {
+    font-size: 1.8rem;
+    color: white;
+    text-shadow: 2px 2px 0px #000;
+    margin-bottom: 1rem;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { text-shadow: 3px 3px 0px #000, 0 0 20px #fff; }
+    to { text-shadow: 3px 3px 0px #000, 0 0 30px #fff, 0 0 40px #fff; }
+}
+
+.character-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 0.5rem 0;
+    width: 100%;
+    max-width: 300px;
+}
+
+.game-mode-selection {
+    display: none; /* Hide completely */
+}
+
+.mode-buttons {
+    display: none; /* Hide completely */
+}
+
+.mode-button {
+    display: none; /* Hide completely */
+}
+
+.character-card {
+    width: 120px;
+    height: 150px;
+    background: linear-gradient(145deg, #2a2a54, #1a1a3e);
+    border: 2px solid #444;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.character-card:hover {
+    transform: scale(1.1);
+    border-color: #00ffff;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+.character-card.selected {
+    border-color: #ffff00;
+    box-shadow: 0 0 30px rgba(255, 255, 0, 0.8);
+}
+
+.character-image {
+    width: 60px;
+    height: 60px;
+    background: #333;
+    border-radius: 50%;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.character-name {
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.player-selection {
+    display: flex;
+    gap: 2rem;
+    margin: 1rem 0;
+}
+
+.player-info {
+    text-align: center;
+    color: white;
+}
+
+.player-info h3 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.selected-character {
+    width: 60px;
+    height: 60px;
+    background: #333;
+    border: 2px solid #666;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin: 0 auto;
+}
+
+.start-button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-top: 1rem;
+}
+
+.start-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+}
+
+.start-button:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Game Screen */
+.game-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+.game-hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1rem;
+    z-index: 10;
+}
+
+.player-hud {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.player-avatar {
+    width: 40px;
+    height: 40px;
+    background: #333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.health-bar {
+    width: 120px;
+    height: 15px;
+    background: #333;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #666;
+}
+
+.health-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4ade80, #22c55e, #16a34a);
+    transition: width 0.3s ease;
+    border-radius: 8px;
+}
+
+.damage-percent {
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    min-width: 40px;
+}
+
+.timer {
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.game-arena {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 60px);
+    background: linear-gradient(180deg, #87ceeb, #98fb98);
+    overflow: hidden;
+}
+
+.platform {
+    position: absolute;
+    background: linear-gradient(145deg, #8b4513, #a0522d);
+    border-radius: 8px;
+    border: 2px solid #654321;
+}
+
+.main-platform {
+    bottom: 80px;
+    left: 20%;
+    width: 60%;
+    height: 20px;
+}
+
+.side-platform {
+    width: 20%;
+    height: 15px;
+}
+
+.left-platform {
+    bottom: 150px;
+    left: 10%;
+}
+
+.right-platform {
+    bottom: 150px;
+    right: 10%;
+}
+
+.top-platform {
+    bottom: 220px;
+    left: 40%;
+    width: 20%;
+}
+
+.fighter {
+    position: absolute;
+    width: 40px;
+    height: 50px;
+    background: #333;
+    border-radius: 8px;
+    transition: all 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    border: 2px solid #666;
+}
+
+.fighter.player1 {
+    border-color: #00ffff;
+}
+
+.fighter.player2 {
+    border-color: #ff6b6b;
+}
+
+.fighter.attacking {
+    transform: scale(1.2);
+    box-shadow: 0 0 20px rgba(255, 255, 0, 0.8);
+}
+
+.fighter.hit {
+    animation: hit-flash 0.3s ease;
+}
+
+@keyframes hit-flash {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(2) hue-rotate(180deg); }
+}
+
+.projectile {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle, #ffff00, #ff6b00);
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
+}
+
+.controls {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    color: white;
+    font-size: 1rem;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.vs-text {
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 0px #000;
+}
+
+.game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    text-align: center;
+    z-index: 200;
+    display: none;
+    min-width: 200px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    border: 2px solid #ffcc00;
+}
+
+.game-over h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: #ffff00;
+    text-shadow: 2px 2px 0px #000;
+}
+
+.restart-button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    background: linear-gradient(45deg, #4ade80, #22c55e);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 1rem;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.restart-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(74, 222, 128, 0.5);
+}
+
+/* Character Specific Styles */
+.mario { background: linear-gradient(45deg, #ff0000, #cc0000); }
+.pikachu { background: linear-gradient(45deg, #ffff00, #cccc00); }
+.kirby { background: linear-gradient(45deg, #ffb6c1, #ff69b4); }
+.random { background: linear-gradient(45deg, #9370db, #663399); }
+
+.special-effect {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 50%;
+    animation: effect-expand 0.5s ease-out forwards;
+}
+
+@keyframes effect-expand {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(3);
+        opacity: 0;
+    }
+}
+
+/* Add styles for Kirby's inhale ability */
+.fighter.has-inhaled::after {
+    content: attr(data-inhaled);
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.5rem;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    padding: 5px;
+    box-shadow: 0 0 10px rgba(255, 105, 180, 0.8);
+    animation: float 1s ease-in-out infinite alternate;
+}
+
+@keyframes float {
+    from { transform: translateX(-50%) translateY(0); }
+    to { transform: translateX(-50%) translateY(-5px); }
+}
+
+/* On-screen Controls */
+.on-screen-controls {
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 15px;
+    pointer-events: none;
+}
+
+.movement-controls {
+    display: flex;
+    align-items: center;
+}
+
+.d-pad {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    pointer-events: auto;
+}
+
+.d-pad-btn {
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid #333;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.1s ease;
+}
+
+.d-pad-btn:active {
+    background: rgba(200, 200, 200, 0.8);
+    transform: scale(0.95);
+}
+
+.d-pad-btn.up {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.d-pad-btn.left {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.d-pad-btn.right {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.d-pad-btn.down {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.action-controls {
+    display: flex;
+    gap: 15px;
+    pointer-events: auto;
+}
+
+.action-btn {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid #333;
+    border-radius: 50%;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.1s ease;
+}
+
+.action-btn:active {
+    background: rgba(200, 200, 200, 0.8);
+    transform: scale(0.95);
+}
+
+.action-btn.attack {
+    background: rgba(255, 100, 100, 0.8);
+}
+
+.action-btn.special {
+    background: rgba(100, 100, 255, 0.8);
+}
+
+/* Hide controls text on mobile */
+@media (max-width: 768px) {
+    .controls {
+        display: none;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Character Selection Screen -->
+        <div class="character-select" id="characterSelect">
+            <h1 class="select-title">SUPER SMASH BROS</h1>
+            
+            <div class="player-selection">
+                <div class="player-info">
+                    <h3>Player 1</h3>
+                    <div class="selected-character" id="p1Selected">?</div>
+                </div>
+                <div class="player-info">
+                    <h3>Player 2</h3>
+                    <div class="selected-character" id="p2Selected">?</div>
+                </div>
+            </div>
+
+            <div class="character-grid">
+                <div class="character-card" data-character="mario">
+                    <div class="character-image mario">🍄</div>
+                    <div class="character-name">Mario</div>
+                </div>
+                <div class="character-card" data-character="pikachu">
+                    <div class="character-image pikachu">⚡</div>
+                    <div class="character-name">Pikachu</div>
+                </div>
+                <div class="character-card" data-character="kirby">
+                    <div class="character-image kirby">🌸</div>
+                    <div class="character-name">Kirby</div>
+                </div>
+                <div class="character-card" data-character="random">
+                    <div class="character-image random">❓</div>
+                    <div class="character-name">Random</div>
+                </div>
+            </div>
+
+            <div class="game-mode-selection">
+                <h3>Game Mode</h3>
+                <div class="mode-buttons">
+                    <button class="mode-button active" data-mode="pvp">Player vs Player</button>
+                    <button class="mode-button" data-mode="cpu">Player vs CPU</button>
+                </div>
+            </div>
+
+            <button class="start-button" id="startGame" disabled>START BATTLE</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="game-screen" id="gameScreen">
+            <div class="game-hud">
+                <div class="player-hud">
+                    <div class="player-avatar" id="p1Avatar">🍄</div>
+                    <div class="health-bar">
+                        <div class="health-fill" id="p1Health"></div>
+                    </div>
+                    <div class="damage-percent" id="p1Damage">0%</div>
+                </div>
+                
+                <div class="vs-text">VS</div>
+                
+                <div class="player-hud">
+                    <div class="damage-percent" id="p2Damage">0%</div>
+                    <div class="health-bar">
+                        <div class="health-fill" id="p2Health"></div>
+                    </div>
+                    <div class="player-avatar" id="p2Avatar">👻</div>
+                </div>
+            </div>
+
+            <div class="game-arena" id="gameArena">
+                <div class="platform main-platform"></div>
+                <div class="platform side-platform left-platform"></div>
+                <div class="platform side-platform right-platform"></div>
+                <div class="platform side-platform top-platform"></div>
+
+                <div class="fighter player1" id="fighter1">🍄</div>
+                <div class="fighter player2" id="fighter2">👻</div>
+            </div>
+
+            <!-- Add on-screen controls -->
+            <div class="on-screen-controls">
+                <div class="movement-controls">
+                    <div class="d-pad">
+                        <button class="d-pad-btn up" id="upBtn">↑</button>
+                        <button class="d-pad-btn left" id="leftBtn">←</button>
+                        <button class="d-pad-btn right" id="rightBtn">→</button>
+                        <button class="d-pad-btn down" id="downBtn">↓</button>
+                    </div>
+                </div>
+                <div class="action-controls">
+                    <button class="action-btn attack" id="attackBtn">Attack</button>
+                    <button class="action-btn special" id="specialBtn">Special</button>
+                </div>
+            </div>
+
+            <div class="controls">
+                <strong>Player 1:</strong> WASD to move, F to attack, G for special
+            </div>
+
+            <div class="game-over" id="gameOver">
+                <h2 id="winner">GAME OVER</h2>
+                <p id="winMessage">Player 1 wins!</p>
+                <button class="restart-button" onclick="restartGame()">PLAY AGAIN</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      // Game State 
+let gameState = { 
+    screen: 'select', // 'select' or 'game' 
+    players: { 
+        p1: { character: null, selected: false }, 
+        p2: { character: null, selected: false } 
+    }, 
+    currentPlayer: 1, 
+    gameTime: 180, // 3 minutes in seconds 
+    gameRunning: false, 
+    gameMode: 'cpu',
+    cpuDifficulty: 'normal', 
+    p1Health: 100,
+    p2Health: 100,
+    p1Ability: null,
+    p2Ability: null
+}; 
+
+// Character data - add jump counts 
+const characters = { 
+    mario: { name: 'Mario', emoji: '🍄', color: 'mario', specialMove: 'fireball', jumps: 2 }, 
+    pikachu: { name: 'Pikachu', emoji: '⚡', color: 'pikachu', specialMove: 'thunderbolt', jumps: 3 }, 
+    kirby: { name: 'Kirby', emoji: '🌸', color: 'kirby', specialMove: 'inhale', jumps: 5 }, 
+    random: { name: 'Random', emoji: '❓', color: 'random' } 
+}; 
+
+// CPU AI state 
+let cpuAI = { 
+    nextAction: 0, 
+    actionCooldown: 0, 
+    targetX: 400, 
+    aggression: 0.5, 
+    lastPlayerX: 0, 
+    comboCooldown: 0 
+}; 
+
+// Fighter game state - update to include jumps 
+let fighters = { 
+    p1: { 
+        x: 300, y: 300, vx: 0, vy: 0, 
+        damage: 0, health: 100, 
+        grounded: false, facing: 1, 
+        character: null, canJump: true, 
+        attacking: false, stunned: false, 
+        jumpsLeft: 2, maxJumps: 2,
+        inhaling: false,
+        hasInhaled: false,
+        inhaledAbility: null
+    }, 
+    p2: { 
+        x: 500, y: 300, vx: 0, vy: 0, 
+        damage: 0, health: 100, 
+        grounded: false, facing: -1, 
+        character: null, canJump: true, 
+        attacking: false, stunned: false, 
+        jumpsLeft: 2, maxJumps: 2,
+        inhaling: false,
+        hasInhaled: false,
+        inhaledAbility: null
+    } 
+}; 
+
+let projectiles = []; 
+let effects = []; 
+let keys = {};
+let inhaleEffect = null;
+
+// Add game speed control
+let gameSpeed = 1;
+let lastFrameTime = 0;
+
+// Add SpecialMove class at the top of the file, after the game state
+class SpecialMove {
+    constructor(name, type, damage, speed, color, effect) {
+        this.name = name;
+        this.type = type;
+        this.damage = damage;
+        this.speed = speed;
+        this.color = color;
+        this.effect = effect;
+    }
+}
+
+// Define special moves
+const specialMoves = {
+    fireball: new SpecialMove(
+        'Fireball',
+        'projectile',
+        12,
+        8,
+        '#ff0000',
+        'fireball'
+    ),
+    thunderbolt: new SpecialMove(
+        'Thunder Jolt',
+        'projectile',
+        10,
+        6,
+        '#ffff00',
+        'thunder'
+    ),
+    inhale: new SpecialMove(
+        'Inhale',
+        'ability',
+        0,
+        0,
+        '#ff69b4',
+        'inhale'
+    )
+};
+
+// Debug function
+
+// Character Selection Logic 
+document.querySelectorAll('.character-card').forEach(card => { 
+    card.addEventListener('click', () => { 
+        const character = card.dataset.character; 
+        selectCharacter(character); 
+    }); 
+}); 
+
+// Game Mode Selection 
+document.querySelectorAll('.mode-button').forEach(button => { 
+    button.addEventListener('click', () => { 
+        document.querySelectorAll('.mode-button').forEach(b => b.classList.remove('active')); 
+        button.classList.add('active'); 
+        gameState.gameMode = button.dataset.mode; 
+        
+        // Update UI based on mode 
+        if (gameState.gameMode === 'cpu') { 
+            document.querySelector('.player-info:last-child h3').textContent = 'CPU'; 
+        } else { 
+            document.querySelector('.player-info:last-child h3').textContent = 'Player 2'; 
+        } 
+    }); 
+}); 
+
+function selectCharacter(character) { 
+    const currentPlayerKey = gameState.currentPlayer === 1 ? 'p1' : 'p2'; 
+    
+    // Handle random selection 
+    if (character === 'random') { 
+        const availableChars = ['mario', 'pikachu', 'kirby']; 
+        character = availableChars[Math.floor(Math.random() * availableChars.length)]; 
+    } 
+    
+    // Remove previous selection 
+    document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected')); 
+    
+    // Set new selection 
+    gameState.players[currentPlayerKey].character = character; 
+    gameState.players[currentPlayerKey].selected = true; 
+    
+    // Update UI 
+    const selectedDiv = document.getElementById(currentPlayerKey + 'Selected'); 
+    selectedDiv.textContent = characters[character].emoji; 
+    selectedDiv.className = `selected-character ${characters[character].color}`; 
+    
+    // Switch to next player or enable start 
+    if (gameState.currentPlayer === 1 && !gameState.players.p2.selected) { 
+        if (gameState.gameMode === 'cpu') { 
+            gameState.currentPlayer = 2; 
+            const cpuChars = ['mario', 'pikachu', 'kirby']; 
+            const cpuChar = cpuChars[Math.floor(Math.random() * cpuChars.length)]; 
+            selectCharacter(cpuChar); 
+        } else { 
+            gameState.currentPlayer = 2; 
+        } 
+    } else if (gameState.players.p1.selected && gameState.players.p2.selected) { 
+        document.getElementById('startGame').disabled = false; 
+    } 
+}
+
+document.getElementById('startGame').addEventListener('click', startGame);
+
+function startGame() {
+    gameState.screen = 'game';
+    gameState.gameMode = 'cpu';
+    
+    // Reset game speed
+    gameSpeed = 1;
+    lastFrameTime = 0;
+    
+    // First render the game screen to ensure elements are visible
+    document.getElementById('characterSelect').style.display = 'none';
+    document.getElementById('gameScreen').style.display = 'block';
+    document.getElementById('gameOver').style.display = 'none';
+    
+    // Initialize fighters
+    fighters.p1.character = gameState.players.p1.character;
+    fighters.p2.character = gameState.players.p2.character;
+    
+    // Set character-specific attributes
+    fighters.p1.maxJumps = characters[fighters.p1.character].jumps;
+    fighters.p1.jumpsLeft = fighters.p1.maxJumps;
+    fighters.p2.maxJumps = characters[fighters.p2.character].jumps;
+    fighters.p2.jumpsLeft = fighters.p2.maxJumps;
+    
+    // Update UI
+    const p1Char = characters[fighters.p1.character];
+    const p2Char = characters[fighters.p2.character];
+    
+    document.getElementById('p1Avatar').textContent = p1Char.emoji;
+    document.getElementById('p1Avatar').className = `player-avatar ${p1Char.color}`;
+    document.getElementById('p2Avatar').textContent = p2Char.emoji;
+    document.getElementById('p2Avatar').className = `player-avatar ${p2Char.color}`;
+    
+    document.getElementById('fighter1').textContent = p1Char.emoji;
+    document.getElementById('fighter1').className = `fighter player1 ${p1Char.color}`;
+    document.getElementById('fighter2').textContent = p2Char.emoji;
+    document.getElementById('fighter2').className = `fighter player2 ${p2Char.color}`;
+    
+    // Update player labels
+    document.querySelector('.player-info:last-child h3').textContent = 'CPU';
+    
+    // Force a layout calculation to ensure elements are rendered
+    document.body.offsetHeight;
+    
+    // Get platform positions using getBoundingClientRect for more accurate positioning
+    const mainPlatform = document.querySelector('.main-platform');
+    const platformRect = mainPlatform.getBoundingClientRect();
+    const arenaRect = document.querySelector('.game-arena').getBoundingClientRect();
+    
+    // Calculate relative position within the arena
+    const platformLeft = platformRect.left - arenaRect.left;
+    const platformTop = platformRect.top - arenaRect.top;
+    const platformWidth = platformRect.width;
+    
+    // Player 1 on the left side
+    fighters.p1.x = platformLeft + (platformWidth * 0.25);
+    fighters.p1.y = platformTop - 80; // Position above the platform
+    fighters.p1.vy = 0;
+    fighters.p1.vx = 0;
+    fighters.p1.facing = 1; // Face right
+    fighters.p1.grounded = true;
+    
+    // Player 2 on the right side
+    fighters.p2.x = platformLeft + (platformWidth * 0.75);
+    fighters.p2.y = platformTop - 80; // Position above the platform
+    fighters.p2.vy = 0;
+    fighters.p2.vx = 0;
+    fighters.p2.facing = -1; // Face left
+    fighters.p2.grounded = true;
+    
+    // Position fighter elements directly
+    const fighter1El = document.getElementById('fighter1');
+    const fighter2El = document.getElementById('fighter2');
+    
+    fighter1El.style.left = fighters.p1.x + 'px';
+    fighter1El.style.top = fighters.p1.y + 'px';
+    fighter2El.style.left = fighters.p2.x + 'px';
+    fighter2El.style.top = fighters.p2.y + 'px';
+    
+    // Fallback positioning if getBoundingClientRect doesn't work as expected
+    if (platformLeft === 0 || platformTop === 0) {
+        // Use hardcoded values as fallback
+        const arenaWidth = document.querySelector('.game-arena').offsetWidth;
+        const arenaHeight = document.querySelector('.game-arena').offsetHeight;
+        
+        // Main platform is typically at the bottom center
+        fighters.p1.x = arenaWidth * 0.3;
+        fighters.p1.y = arenaHeight - 130; // 100px from bottom + fighter height
+        fighters.p2.x = arenaWidth * 0.7;
+        fighters.p2.y = arenaHeight - 130;
+        
+        fighter1El.style.left = fighters.p1.x + 'px';
+        fighter1El.style.top = fighters.p1.y + 'px';
+        fighter2El.style.left = fighters.p2.x + 'px';
+        fighter2El.style.top = fighters.p2.y + 'px';
+    }
+    
+    // Start countdown
+    startCountdown();
+    
+    setupOnScreenControls();
+}
+
+function startCountdown() {
+    const gameArena = document.getElementById('gameArena');
+    let count = 3;
+    
+    // Create countdown element
+    const countdownEl = document.createElement('div');
+    countdownEl.className = 'countdown';
+    countdownEl.style.position = 'absolute';
+    countdownEl.style.top = '50%';
+    countdownEl.style.left = '50%';
+    countdownEl.style.transform = 'translate(-50%, -50%)';
+    countdownEl.style.fontSize = '8rem';
+    countdownEl.style.color = 'white';
+    countdownEl.style.textShadow = '3px 3px 0px #000';
+    countdownEl.style.zIndex = '100';
+    gameArena.appendChild(countdownEl);
+    
+    // Start game loop immediately but don't allow movement yet
+    gameState.gameRunning = false;
+    gameLoop(); // Make sure gameLoop is called here
+    
+    // Start countdown
+    const countdownInterval = setInterval(() => {
+        if (count > 0) {
+            countdownEl.textContent = count;
+            countdownEl.style.animation = 'countdownPulse 1s ease-in-out';
+            if (typeof playSound === 'function') playSound('countdown');
+            count--;
+        } else {
+            countdownEl.textContent = 'FIGHT!';
+            countdownEl.style.animation = 'countdownPulse 1s ease-in-out';
+            if (typeof playSound === 'function') playSound('fight');
+            
+            // Start the game after countdown
+            setTimeout(() => {
+                countdownEl.remove();
+                gameState.gameRunning = true; // Enable movement
+                startGameTimer();
+            }, 1000);
+            
+            clearInterval(countdownInterval);
+        }
+    }, 1000);
+}
+
+function startGameTimer() {
+    const timer = setInterval(() => {
+        if (!gameState.gameRunning) {
+            clearInterval(timer);
+            return;
+        }
+
+        gameState.gameTime--;
+        const minutes = Math.floor(gameState.gameTime / 60);
+        const seconds = gameState.gameTime % 60;
+        document.getElementById('gameTimer').textContent =
+            `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        if (gameState.gameTime <= 0) {
+            endGame('Time\'s up!');
+            clearInterval(timer);
+        }
+    }, 1000);
+}
+
+// Update input handling for all characters
+document.addEventListener('keydown', (e) => {
+    const key = e.key.toLowerCase();
+    keys[key] = true;
+    
+    // Special handling for jump keys
+    if (key === 'w') keys.wPressed = true;
+    if (key === 'arrowup') keys.upPressed = true;
+    
+    // Handle special attacks (G key press) - Enhanced version
+    if (key === 'g' && !keys.gHeld) {
+        keys.gHeld = true;
+        const p1Fighter = fighters.p1;
+        
+        if (p1Fighter.character === 'kirby') {
+            if (p1Fighter.hasInhaled) {
+                // If Kirby has inhaled someone, steal their ability and eject them
+                stealAbilityAndTransform('p1');
+            } else if (!p1Fighter.attacking) {
+                // Check if Kirby has a stolen ability
+                if (characters.kirby.specialMove !== 'inhale') {
+                    // Use the stolen ability
+                    enhancedSpecialAttack('p1');
+                } else {
+                    // If no stolen ability, use inhale
+                    startInhale('p1');
+                }
+            }
+        } else {
+            // For other characters, use their special attack
+            specialAttack('p1');
+        }
+    }
+    
+    // Handle normal attacks (F key press)
+    if (key === 'f') {
+        const p1Fighter = fighters.p1;
+        if (p1Fighter.character === 'kirby' && p1Fighter.hasInhaled) {
+            spitOutWithoutStealing('p1');
+        } else if (!p1Fighter.attacking && !p1Fighter.stunned) {
+            attack('p1');
+        }
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    const key = e.key.toLowerCase();
+    keys[key] = false;
+    
+    // Reset jump key flags
+    if (key === 'w') keys.wPressed = false;
+    if (key === 'arrowup') keys.upPressed = false;
+    
+    // Handle Kirby's inhale end (G key release)
+    if (key === 'g') {
+        keys.gHeld = false;
+        const p1Fighter = fighters.p1;
+        if (p1Fighter.character === 'kirby' && p1Fighter.inhaling && !p1Fighter.hasInhaled) {
+            stopInhale('p1');
+        }
+    }
+});
+
+// New function to steal ability and eject opponent
+function stealAbilityAndEject(player) {
+    const fighter = fighters[player];
+    const opponent = player === 'p1' ? 'p2' : 'p1';
+    const opponentFighter = fighters[opponent];
+    
+    // Steal the opponent's ability permanently
+    if (fighter.inhaledAbility) {
+        // Change Kirby's special move to the stolen ability
+        characters.kirby.specialMove = fighter.inhaledAbility;
+        
+        // Create visual effect for ability steal
+        createEffect(fighter.x, fighter.y, 'steal');
+    }
+    
+    // Make opponent visible and active again
+    opponentFighter.visible = true;
+    opponentFighter.stunned = false;
+    
+    // Position opponent right next to Kirby (not launched away)
+    opponentFighter.x = fighter.x + (fighter.facing * 60); // Right next to Kirby
+    opponentFighter.y = fighter.y; // Same height
+    
+    // Give opponent minimal velocity (just enough to separate them)
+    opponentFighter.vx = fighter.facing * 2; // Very small push
+    opponentFighter.vy = -2; // Small upward movement
+    
+    // Show opponent element again
+    const opponentElement = document.getElementById(`fighter${opponent === 'p1' ? '1' : '2'}`);
+    if (opponentElement) {
+        opponentElement.style.display = 'flex';
+        opponentElement.style.opacity = '1';
+        opponentElement.style.left = opponentFighter.x + 'px';
+        opponentElement.style.top = opponentFighter.y + 'px';
+    }
+    
+    // Reset Kirby's state
+    fighter.hasInhaled = false;
+    fighter.inhaledAbility = null;
+    fighter.inhaling = false;
+    fighter.attacking = false;
+    
+    // Remove visual indicator
+    const fighterElement = document.getElementById(`fighter${player === 'p1' ? '1' : '2'}`);
+    if (fighterElement) {
+        fighterElement.removeAttribute('data-inhaled');
+        fighterElement.classList.remove('has-inhaled');
+    }
+    
+    // Create eject effect
+    createEffect(opponentFighter.x, opponentFighter.y, 'ability-steal');
+    
+    // Force a position update
+    updatePositions();
+}
+
+// New function to spit out without stealing ability (for F key)
+function spitOutWithoutStealing(player) {
+    const fighter = fighters[player];
+    const opponent = player === 'p1' ? 'p2' : 'p1';
+    const opponentFighter = fighters[opponent];
+    
+    
+    
+    // Make opponent visible and active again
+    opponentFighter.visible = true;
+    opponentFighter.stunned = false;
+    
+    // Launch opponent away from Kirby with more force
+    opponentFighter.x = fighter.x + (fighter.facing * 80);
+    opponentFighter.y = fighter.y;
+    opponentFighter.vx = fighter.facing * 12; // Strong launch
+    opponentFighter.vy = -8;
+    
+    // Show opponent element again
+    const opponentElement = document.getElementById(`fighter${opponent === 'p1' ? '1' : '2'}`);
+    if (opponentElement) {
+        opponentElement.style.display = 'flex';
+        opponentElement.style.opacity = '1';
+        opponentElement.style.left = opponentFighter.x + 'px';
+        opponentElement.style.top = opponentFighter.y + 'px';
+    }
+    
+    // Deal damage to ejected opponent
+    hit(opponent, 15);
+    
+    // Reset Kirby's state (without stealing ability)
+    fighter.hasInhaled = false;
+    fighter.inhaledAbility = null;
+    fighter.inhaling = false;
+        fighter.attacking = false;
+    
+    // Remove visual indicator
+    const fighterElement = document.getElementById(`fighter${player === 'p1' ? '1' : '2'}`);
+    if (fighterElement) {
+        fighterElement.removeAttribute('data-inhaled');
+        fighterElement.classList.remove('has-inhaled');
+    }
+    
+    // Create spit-out effect
+    createEffect(opponentFighter.x, opponentFighter.y, 'spit-out');
+    
+    // Force a position update
+    updatePositions();
+}
+
+// Update the specialAttack function to properly handle all characters
+function specialAttack(player) {
+    const fighter = fighters[player];
+    const character = fighter.character;
+
+    if (fighter.stunned || fighter.attacking) return;
+
+    fighter.attacking = true;
+    const currentSpecialMove = characters[character].specialMove;
+    const specialMove = specialMoves[currentSpecialMove];
+
+    // Create projectile based on character
+    if (currentSpecialMove === 'fireball' || currentSpecialMove === 'thunderbolt') {
+        const projectile = {
+            x: fighter.x + (fighter.facing * 30),
+            y: fighter.y + 20,
+            vx: fighter.facing * 20, // Much higher speed for better movement
+            vy: currentSpecialMove === 'thunderbolt' ? -2 : 0,
+            damage: specialMove.damage,
+            owner: player,
+            type: currentSpecialMove,
+            bounces: 0,
+            maxBounces: currentSpecialMove === 'thunderbolt' ? 3 : 0,
+            element: createProjectileElement(specialMove, currentSpecialMove)
+        };
+        
+        // Position the projectile element
+        if (projectile.element) {
+            projectile.element.style.left = projectile.x + 'px';
+            projectile.element.style.top = projectile.y + 'px';
+        }
+        
+        projectiles.push(projectile);
+        createEffect(fighter.x + (fighter.facing * 40), fighter.y, specialMove.effect);
+    }
+
+    setTimeout(() => {
+        fighter.attacking = false;
+    }, 500);
+}
+
+// Update createProjectileElement to differentiate between fireball and thunderbolt
+function createProjectileElement(specialMove, moveType) {
+    const element = document.createElement('div');
+    element.className = `projectile ${moveType}`;
+    element.style.position = 'absolute';
+    element.style.width = '30px';
+    element.style.height = '30px';
+    element.style.borderRadius = '50%';
+    element.style.pointerEvents = 'none';
+    element.style.zIndex = '5';
+    element.style.display = 'block';
+    
+    // Different styling for different projectiles
+    if (moveType === 'fireball') {
+        element.style.background = 'radial-gradient(circle, #ff4500, #ff0000)';
+        element.style.boxShadow = '0 0 20px #ff0000, inset 0 0 10px #ffff00';
+        element.style.border = '2px solid #ffff00';
+        // Add flame effect
+        element.innerHTML = '🔥';
+        element.style.fontSize = '20px';
+        element.style.display = 'flex';
+        element.style.alignItems = 'center';
+        element.style.justifyContent = 'center';
+    } else if (moveType === 'thunderbolt') {
+        element.style.background = 'radial-gradient(circle, #ffff00, #ffd700)';
+        element.style.boxShadow = '0 0 25px #ffff00, inset 0 0 15px #ffffff';
+        element.style.border = '2px solid #ffffff';
+        // Add lightning effect
+        element.innerHTML = '⚡';
+        element.style.fontSize = '20px';
+        element.style.display = 'flex';
+        element.style.alignItems = 'center';
+        element.style.justifyContent = 'center';
+        // Add crackling animation
+        element.style.animation = 'lightning-crackle 0.1s infinite alternate';
+    }
+
+    // Add to game arena
+    const gameArena = document.querySelector('.game-arena');
+    if (gameArena) {
+        gameArena.appendChild(element);
+    }
+
+    return element;
+}
+
+// Update updateProjectiles to handle different projectile types correctly
+function updateProjectiles() {
+    // Update projectile positions
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        const projectile = projectiles[i];
+        
+        // Update position based on velocity
+        projectile.x += projectile.vx;
+        projectile.y += projectile.vy;
+        
+        // Update projectile visual element
+        if (projectile.element) {
+            projectile.element.style.left = projectile.x + 'px';
+            projectile.element.style.top = projectile.y + 'px';
+            projectile.element.style.display = 'block';
+        }
+        
+        // Apply different physics based on projectile type
+        if (projectile.type === 'thunderbolt') {
+            // Thunder jolts have gravity and bounce
+            projectile.vy += 0.4; // Gravity effect
+            
+            // Check for ground collision and bounce
+            const arenaRect = document.querySelector('.game-arena').getBoundingClientRect();
+            const platforms = document.querySelectorAll('.platform');
+            let bounced = false;
+            
+            platforms.forEach(platform => {
+                const platformRect = platform.getBoundingClientRect();
+                const platformTop = platformRect.top - arenaRect.top;
+                const platformLeft = platformRect.left - arenaRect.left;
+                const platformWidth = platformRect.width;
+                
+                // Check if projectile hits platform from above
+                if (projectile.y + 15 >= platformTop && 
+                    projectile.y + 15 <= platformTop + 20 &&
+                    projectile.x + 15 > platformLeft && 
+                    projectile.x + 15 < platformLeft + platformWidth &&
+                    projectile.vy > 0 && 
+                    projectile.bounces < projectile.maxBounces) {
+                    
+                    projectile.y = platformTop - 15;
+                    projectile.vy = -Math.abs(projectile.vy) * 0.8; // Bounce with some energy loss
+                    projectile.bounces++;
+                    bounced = true;
+                    
+                    // Create bounce effect
+                    createEffect(projectile.x, projectile.y, 'thunder');
+                }
+            });
+            
+            // Remove after max bounces
+            if (projectile.bounces >= projectile.maxBounces && projectile.vy > 0) {
+                if (projectile.element) {
+                    projectile.element.remove();
+                }
+                projectiles.splice(i, 1);
+                continue;
+            }
+        }
+        
+        // Remove projectiles that are out of bounds
+        const arenaRect = document.querySelector('.game-arena').getBoundingClientRect();
+        if (projectile.x < -50 || projectile.x > arenaRect.width + 50 || 
+            projectile.y < -50 || projectile.y > arenaRect.height + 50) {
+            if (projectile.element) {
+                projectile.element.remove();
+            }
+            projectiles.splice(i, 1);
+            continue;
+        }
+        
+        // Check for collisions with players
+        const targetPlayer = projectile.owner === 'p1' ? 'p2' : 'p1';
+        const targetFighter = fighters[targetPlayer];
+        
+        // Only check collision with target player, not the owner
+        if (targetFighter.visible !== false && 
+            Math.abs(projectile.x - targetFighter.x) < 40 &&
+            Math.abs(projectile.y - targetFighter.y) < 50) {
+            
+            // Different hit effects for different projectiles
+            if (projectile.type === 'fireball') {
+                hit(targetPlayer, projectile.damage);
+                createEffect(projectile.x, projectile.y, 'fireball');
+                // Add burn effect
+                targetFighter.vx += projectile.vx * 0.3; // Knockback in projectile direction
+            } else if (projectile.type === 'thunderbolt') {
+                hit(targetPlayer, projectile.damage);
+                createEffect(projectile.x, projectile.y, 'thunder');
+                // Add electric stun effect
+                targetFighter.stunned = true;
+                setTimeout(() => {
+                    targetFighter.stunned = false;
+                }, 500);
+            }
+            
+            if (projectile.element) {
+                projectile.element.remove();
+            }
+            projectiles.splice(i, 1);
+        }
+    }
+}
+
+// Add CSS animations for lightning effect
+const lightningStyles = document.createElement('style');
+lightningStyles.textContent = `
+    @keyframes lightning-crackle {
+        0% { 
+            transform: scale(1) rotate(0deg); 
+            filter: brightness(1.2); 
+        }
+        50% { 
+            transform: scale(1.1) rotate(5deg); 
+            filter: brightness(1.5); 
+        }
+        100% { 
+            transform: scale(0.9) rotate(-5deg); 
+            filter: brightness(1.8); 
+        }
+    }
+    
+    .projectile.fireball {
+        animation: fireball-flicker 0.2s infinite alternate;
+    }
+    
+    @keyframes fireball-flicker {
+        0% { 
+            transform: scale(1); 
+            filter: brightness(1.2); 
+        }
+        100% { 
+            transform: scale(1.05); 
+            filter: brightness(1.4); 
+        }
+    }
+`;
+document.head.appendChild(lightningStyles);
+
+// Update createEffect to use SpecialMove properties
+function createEffect(x, y, type) {
+    const effect = document.createElement('div');
+    effect.className = `special-effect ${type}`;
+    effect.style.position = 'absolute';
+    effect.style.left = x + 'px';
+    effect.style.top = y + 'px';
+    effect.style.pointerEvents = 'none';
+    effect.style.zIndex = '10';
+
+    const specialMove = Object.values(specialMoves).find(move => move.effect === type);
+    
+    if (specialMove) {
+        effect.style.background = specialMove.color;
+        effect.style.boxShadow = `0 0 20px ${specialMove.color}`;
+        effect.style.width = '40px';
+        effect.style.height = '40px';
+        effect.style.borderRadius = '50%';
+        effect.style.animation = 'effect-expand 0.5s ease-out forwards';
+    }
+
+    document.querySelector('.game-arena').appendChild(effect);
+
+    setTimeout(() => {
+        if (effect.parentNode) {
+            effect.remove();
+        }
+    }, 1000);
+}
+
+// Add new CSS animations for ability stealing
+const abilityStealStyles = document.createElement('style');
+abilityStealStyles.textContent = `
+    @keyframes ability-steal {
+        0% { 
+            transform: scale(0.5); 
+            opacity: 1; 
+            background: radial-gradient(circle, #ff1493, #ff69b4);
+        }
+        50% { 
+            transform: scale(1.5); 
+            opacity: 0.8; 
+            background: radial-gradient(circle, #ff69b4, #ffb6c1);
+        }
+        100% { 
+            transform: scale(2); 
+            opacity: 0; 
+            background: radial-gradient(circle, #ffb6c1, transparent);
+        }
+    }
+    
+    @keyframes steal-pulse {
+        0% { 
+            transform: scale(1); 
+            opacity: 0.9; 
+        }
+        50% { 
+            transform: scale(1.3); 
+            opacity: 0.7; 
+        }
+        100% { 
+            transform: scale(0.8); 
+            opacity: 0; 
+        }
+    }
+    
+    .fighter.has-inhaled::after {
+        content: attr(data-inhaled);
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        font-size: 0.8em;
+        background: rgba(255, 105, 180, 0.8);
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: inhaled-indicator 1s infinite alternate;
+    }
+    
+    @keyframes inhaled-indicator {
+        0% { transform: scale(0.9); opacity: 0.7; }
+        100% { transform: scale(1.1); opacity: 1; }
+    }
+`;
+document.head.appendChild(abilityStealStyles);
+
+// New function to start inhale
+function startInhale(player) {
+    const fighter = fighters[player];
+    if (fighter.character !== 'kirby' || fighter.hasInhaled || fighter.attacking) return;
+    
+            fighter.inhaling = true;
+            fighter.attacking = true;
+    
+    // Create inhale effect
+    createInhaleEffect(player);
+}
+
+// New function to stop inhale
+function stopInhale(player) {
+    const fighter = fighters[player];
+    if (fighter.character !== 'kirby' || !fighter.inhaling) return;
+    
+            fighter.inhaling = false;
+            fighter.attacking = false;
+    
+    // Remove inhale effect
+    removeInhaleEffect();
+}
+
+// New function to create and manage inhale effect
+function createInhaleEffect(player) {
+    const fighter = fighters[player];
+    
+    // Remove existing effect first
+    removeInhaleEffect();
+    
+    // Create new inhale effect
+    const effect = document.createElement('div');
+    effect.className = 'special-effect inhale';
+    effect.id = 'inhale-effect';
+    effect.style.position = 'absolute';
+    effect.style.left = (fighter.x + (fighter.facing * 70)) + 'px';
+    effect.style.top = (fighter.y + 10) + 'px';
+    effect.style.background = 'radial-gradient(ellipse 80px 40px, rgba(255, 105, 180, 0.8), rgba(255, 105, 180, 0.3), transparent)';
+    effect.style.width = '100px';
+    effect.style.height = '60px';
+    effect.style.borderRadius = '50%';
+    effect.style.animation = 'inhale-pulse 0.3s infinite alternate';
+    effect.style.pointerEvents = 'none';
+    effect.style.zIndex = '10';
+    
+    document.querySelector('.game-arena').appendChild(effect);
+    inhaleEffect = effect;
+}
+
+// New function to remove inhale effect
+function removeInhaleEffect() {
+    if (inhaleEffect) {
+        inhaleEffect.remove();
+        inhaleEffect = null;
+    }
+}
+
+function attack(player) {
+    const fighter = fighters[player];
+    fighter.attacking = true;
+
+    const fighterEl = document.getElementById(player === 'p1' ? 'fighter1' : 'fighter2');
+    fighterEl.classList.add('attacking');
+
+            const opponent = player === 'p1' ? 'p2' : 'p1';
+    if (checkCollision(fighter, fighters[opponent], 80)) {
+        hit(opponent, 15);
+    }
+
+    createEffect(fighter.x + (fighter.facing * 40), fighter.y, '#ffff00');
+
+    setTimeout(() => {
+        fighter.attacking = false;
+        fighterEl.classList.remove('attacking');
+    }, 300);
+}
+
+// Update the normalAttack function
+function normalAttack(player) {
+    const fighter = fighters[player];
+    if (fighter.attacking || fighter.stunned) return;
+
+    fighter.attacking = true;
+
+    // If Kirby has inhaled someone, spit them out
+    if (fighter.character === 'kirby' && fighter.hasInhaled) {
+        ejectOpponent(player);
+        setTimeout(() => {
+            fighter.attacking = false;
+        }, 300);
+        return;
+    }
+
+        // Regular attack logic
+        const opponent = player === 'p1' ? 'p2' : 'p1';
+        const opponentFighter = fighters[opponent];
+
+        if (Math.abs(fighter.x - opponentFighter.x) < 50) {
+            hit(opponent, 10);
+            createEffect(opponentFighter.x, opponentFighter.y, 'hit');
+    }
+
+    setTimeout(() => {
+        fighter.attacking = false;
+    }, 300);
+}
+
+// Update the ejectOpponent function to be more reliable
+function ejectOpponent(player) {
+    const fighter = fighters[player];
+    const opponent = player === 'p1' ? 'p2' : 'p1';
+    const opponentFighter = fighters[opponent];
+    
+    
+    // Make opponent visible and active again
+    opponentFighter.visible = true;
+    opponentFighter.stunned = false;
+    
+    // Position opponent next to Kirby
+    opponentFighter.x = fighter.x + (fighter.facing * 80);
+    opponentFighter.y = fighter.y;
+    
+    // Launch opponent away from Kirby
+    opponentFighter.vx = fighter.facing * 12;
+    opponentFighter.vy = -8;
+    
+    // Show opponent element again
+    const opponentElement = document.getElementById(`fighter${opponent === 'p1' ? '1' : '2'}`);
+    if (opponentElement) {
+        opponentElement.style.display = 'flex';
+        opponentElement.style.opacity = '1';
+        opponentElement.style.left = opponentFighter.x + 'px';
+        opponentElement.style.top = opponentFighter.y + 'px';
+    }
+    
+    // Use the stolen ability before ejecting
+    if (fighter.inhaledAbility) {
+        useInhaledAbility(player, fighter.inhaledAbility);
+    }
+    
+    // Deal damage to ejected opponent
+    hit(opponent, 15);
+    
+    // Reset Kirby's state
+    fighter.hasInhaled = false;
+    fighter.inhaledAbility = null;
+    fighter.inhaling = false;
+    fighter.attacking = false;
+    
+    // Create eject effect
+    createEffect(opponentFighter.x, opponentFighter.y, 'spit-out');
+    
+    // Force a position update
+    updatePositions();
+}
+
+function useInhaledAbility(player, ability) {
+    const fighter = fighters[player];
+    const opponent = player === 'p1' ? 'p2' : 'p1';
+    const opponentFighter = fighters[opponent];
+    
+    // Use the ability
+    switch(ability) {
+        case 'fireball':
+            const fireball = {
+                x: fighter.x + (fighter.facing * 30),
+                y: fighter.y,
+                vx: fighter.facing * 8,
+                vy: 0,
+                damage: 10,
+                owner: player,
+                type: 'fireball'
+            };
+            projectiles.push(fireball);
+            createEffect(fighter.x + (fighter.facing * 40), fighter.y, 'fireball');
+            break;
+            
+        case 'thunderbolt':
+            if (Math.abs(fighter.x - opponentFighter.x) < 100) {
+                hit(opponent, 20);
+                createEffect(opponentFighter.x, opponentFighter.y - 100, 'thunder');
+            }
+            break;
+    }
+}
+
+function spitOutOpponent(player) {
+    const fighter = fighters[player];
+    const opponent = player === 'p1' ? 'p2' : 'p1';
+    const opponentFighter = fighters[opponent];
+    
+    // Make opponent visible again
+    opponentFighter.visible = true;
+    opponentFighter.stunned = false;
+    
+    // Launch opponent in the direction Kirby is facing
+    opponentFighter.vx = fighter.facing * 15;
+    opponentFighter.vy = -10;
+    hit(opponent, 15);
+    
+    createEffect(opponentFighter.x, opponentFighter.y, 'spit-out');
+}
+
+function hit(player, damage) {
+    const fighter = fighters[player];
+    fighter.damage += damage;
+
+    const knockbackMultiplier = 0.5 + (fighter.damage / 100);
+    const knockback = damage * knockbackMultiplier;
+    fighter.vx += (player === 'p1' ? -1 : 1) * knockback;
+    fighter.vy -= knockback * 0.5;
+
+    const fighterEl = document.getElementById(player === 'p1' ? 'fighter1' : 'fighter2');
+    fighterEl.classList.add('hit');
+
+    setTimeout(() => {
+        fighterEl.classList.remove('hit');
+    }, 300);
+
+    document.getElementById(player + 'Damage').textContent = fighter.damage + '%';
+}
+
+function checkCollision(obj1, obj2, distance) {
+    const dx = obj1.x - obj2.x;
+    const dy = obj1.y - obj2.y;
+    return Math.sqrt(dx * dx + dy * dy) < distance;
+}
+
+function gameLoop(timestamp) {
+    if (!lastFrameTime) lastFrameTime = timestamp;
+    const deltaTime = timestamp - lastFrameTime;
+    lastFrameTime = timestamp;
+    
+    // Cap the frame rate to prevent excessive speed
+    if (deltaTime < 16) { // Approximately 60 FPS
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+    
+    handleMovement();
+    updateProjectiles(); // ADD THIS LINE
+    updatePositions();
+    requestAnimationFrame(gameLoop);
+}
+
+// Start the game loop
+gameLoop();
+
+function updatePositions() {
+    if (!gameState.gameRunning) return;
+
+    // Update Kirby's inhale mechanics
+    for (const player of ['p1', 'p2']) {
+        const fighter = fighters[player];
+        if (fighter.character === 'kirby') {
+            
+            // Handle active inhaling
+            if (fighter.inhaling && !fighter.hasInhaled) {
+                // Update inhale effect position
+                if (inhaleEffect) {
+                    inhaleEffect.style.left = (fighter.x + (fighter.facing * 70)) + 'px';
+                    inhaleEffect.style.top = (fighter.y + 10) + 'px';
+                }
+
+                const opponent = player === 'p1' ? 'p2' : 'p1';
+                const opponentFighter = fighters[opponent];
+                
+                // Check if opponent is in inhale range
+                const inhaleRange = 120;
+                const distance = Math.abs(fighter.x - opponentFighter.x);
+                const verticalDistance = Math.abs(fighter.y - opponentFighter.y);
+                
+                
+                if (distance < inhaleRange && verticalDistance < 80) {
+                    // Pull opponent towards Kirby
+                    const pullStrength = 0.8;
+                    const direction = fighter.x > opponentFighter.x ? 1 : -1;
+                    opponentFighter.vx += direction * pullStrength;
+                    
+                    // Check if close enough to inhale
+                    if (distance < 60 && verticalDistance < 50) {
+                        // Successfully inhale opponent
+                        fighter.hasInhaled = true;
+                        fighter.inhaledAbility = characters[opponentFighter.character].specialMove;
+                        fighter.inhaling = false;
+                        
+                        // Hide opponent immediately
+                opponentFighter.stunned = true;
+                opponentFighter.visible = false;
+                opponentFighter.attacking = false;
+                opponentFighter.inhaling = false;
+                        
+                        const opponentElement = document.getElementById(`fighter${opponent === 'p1' ? '1' : '2'}`);
+                        if (opponentElement) {
+                            opponentElement.style.display = 'none';
+                        }
+                        
+                        // Remove inhale effect and create swallow effect
+                        removeInhaleEffect();
+                        createEffect(fighter.x, fighter.y, 'swallow');
+                    }
+                    }
+                }
+                
+            // Handle inhaled opponent positioning
+            if (fighter.hasInhaled) {
+                const opponent = player === 'p1' ? 'p2' : 'p1';
+                const opponentFighter = fighters[opponent];
+                
+                // Keep opponent completely inside Kirby
+                opponentFighter.x = fighter.x;
+                opponentFighter.y = fighter.y;
+                opponentFighter.vx = 0;
+                opponentFighter.vy = 0;
+                        opponentFighter.stunned = true;
+                        opponentFighter.visible = false;
+                        opponentFighter.attacking = false;
+                        opponentFighter.inhaling = false;
+                
+                // Keep opponent hidden
+                const opponentElement = document.getElementById(`fighter${opponent === 'p1' ? '1' : '2'}`);
+                if (opponentElement) {
+                    opponentElement.style.display = 'none';
+                }
+                
+                // Add visual indicator for inhaled opponent with correct emoji
+                const fighterElement = document.getElementById(`fighter${player === 'p1' ? '1' : '2'}`);
+                if (fighterElement) {
+                    const opponentChar = characters[opponentFighter.character];
+                    fighterElement.setAttribute('data-inhaled', opponentChar.emoji);
+                    fighterElement.classList.add('has-inhaled');
+                }
+            } else {
+                // Remove visual indicator if not inhaling
+                const fighterElement = document.getElementById(`fighter${player === 'p1' ? '1' : '2'}`);
+                if (fighterElement) {
+                    fighterElement.removeAttribute('data-inhaled');
+                    fighterElement.classList.remove('has-inhaled');
+                }
+            }
+        }
+    }
+
+    // Apply gravity and movement
+    const gravity = 0.8;
+    for (const fighter of Object.values(fighters)) {
+        // Skip movement updates for inhaled fighters
+        if (!fighter.visible && fighter.stunned) continue;
+        
+        fighter.vy += gravity;
+        
+        // Update position
+        fighter.x += fighter.vx;
+        fighter.y += fighter.vy;
+        
+        // Check platform collisions
+        let onPlatform = false;
+        const platforms = document.querySelectorAll('.platform');
+        platforms.forEach(platform => {
+            const platformRect = platform.getBoundingClientRect();
+            const arenaRect = document.querySelector('.game-arena').getBoundingClientRect();
+            
+            const platformLeft = platformRect.left - arenaRect.left;
+            const platformTop = platformRect.top - arenaRect.top;
+            const platformWidth = platformRect.width;
+            
+            if (fighter.y + 80 > platformTop && 
+                fighter.y < platformTop + 30 &&
+                fighter.x + 40 > platformLeft && 
+                fighter.x < platformLeft + platformWidth) {
+                if (fighter.vy > 0) {
+                    fighter.y = platformTop - 80;
+                    fighter.vy = 0;
+                    fighter.canJump = true;
+                    fighter.jumpsLeft = fighter.maxJumps;
+                    onPlatform = true;
+                }
+            }
+        });
+        
+        // Check arena boundaries for death
+        const arenaRect = document.querySelector('.game-arena').getBoundingClientRect();
+        
+        if (fighter.x <= 0 || 
+            fighter.x + 40 >= arenaRect.width || 
+            fighter.y <= 0 || 
+            fighter.y + 80 >= arenaRect.height) {
+            if (fighter === fighters.p1) {
+                endGame('CPU wins!');
+            } else {
+                endGame('Player wins!');
+            }
+            return;
+        }
+        
+        // Update fighter element position (only for visible fighters)
+        const fighterElement = document.getElementById(`fighter${fighter === fighters.p1 ? '1' : '2'}`);
+        if (fighterElement && fighter.visible !== false) {
+            fighterElement.style.left = fighter.x + 'px';
+            fighterElement.style.top = fighter.y + 'px';
+            fighterElement.style.transform = `scaleX(${fighter.facing})`;
+            fighterElement.style.display = 'flex';
+            fighterElement.style.opacity = '1';
+        }
+    }
+}
+
+function checkCollisions() {
+    // Check for player collisions
+    if (checkCollision(fighters.p1, fighters.p2, 60)) {
+        // Push players apart
+        const dx = fighters.p1.x - fighters.p2.x;
+        const pushForce = 2;
+        
+        if (dx > 0) {
+            fighters.p1.vx += pushForce;
+            fighters.p2.vx -= pushForce;
+        } else {
+            fighters.p1.vx -= pushForce;
+            fighters.p2.vx += pushForce;
+        }
+    }
+}
+
+// Make sure this function exists to update the visual elements
+function updateVisuals() {
+    // Update fighter positions
+    const fighter1El = document.getElementById('fighter1');
+    const fighter2El = document.getElementById('fighter2');
+    
+    fighter1El.style.left = fighters.p1.x + 'px';
+    fighter1El.style.top = fighters.p1.y + 'px';
+    fighter2El.style.left = fighters.p2.x + 'px';
+    fighter2El.style.top = fighters.p2.y + 'px';
+    
+    // Update other visual elements as needed
+}
+
+// Update handleMovement to only handle player 1 (since p2 is CPU)
+function handleMovement() {
+    if (!gameState.gameRunning) return;
+
+    // Player 1 controls (WASD)
+    if (keys['a']) {
+        fighters.p1.vx = -5;
+        fighters.p1.facing = -1;
+    } else if (keys['d']) {
+        fighters.p1.vx = 5;
+        fighters.p1.facing = 1;
+    } else {
+        fighters.p1.vx = 0;
+    }
+
+    if (keys['w'] && fighters.p1.canJump) {
+        fighters.p1.vy = -15;
+        fighters.p1.canJump = false;
+        createEffect(fighters.p1.x, fighters.p1.y + 30, 'jump');
+    }
+
+    if (keys['s']) {
+        fighters.p1.vy = 5; // Allow phasing through platforms
+    }
+
+    // CPU controls (simplified AI)
+    const cpu = fighters.p2;
+    const player = fighters.p1;
+    
+    // Only move CPU if not inhaled
+    if (!player.hasInhaled) {
+        // Basic movement towards player
+        if (Math.abs(cpu.x - player.x) > 50) {
+            cpu.vx = cpu.x > player.x ? -3 : 3;
+            cpu.facing = cpu.vx > 0 ? 1 : -1;
+        } else {
+            cpu.vx = 0;
+        }
+
+        // Jump occasionally
+        if (cpu.canJump && Math.random() < 0.02) {
+            cpu.vy = -15;
+            cpu.canJump = false;
+            createEffect(cpu.x, cpu.y + 30, 'jump');
+        }
+
+        // Attack when close
+        if (Math.abs(cpu.x - player.x) < 60 && !cpu.attacking) {
+            normalAttack('p2');
+        }
+    } else {
+        // If inhaled, stop all movement
+        cpu.vx = 0;
+        cpu.vy = 0;
+    }
+}
+
+function endGame(message) {
+    gameState.gameRunning = false;
+    
+    // Show game over screen
+    const gameOver = document.getElementById('gameOver');
+    const winner = document.getElementById('winner');
+    const winMessage = document.getElementById('winMessage');
+    
+    gameOver.style.display = 'block';
+    winner.textContent = message;
+    winMessage.textContent = message === 'Player wins!' ? 
+        'You defeated the CPU!' : 
+        'The CPU defeated you!';
+    
+    // Add some visual effects
+    gameOver.style.animation = 'gameOverAppear 0.5s ease-out';
+    winner.style.color = message === 'Player wins!' ? '#4ade80' : '#ef4444';
+}
+
+// Add CSS animations for inhale effects
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes inhale-pulse {
+        0% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.2); opacity: 0.6; }
+        100% { transform: scale(1); opacity: 0.8; }
+    }
+    
+    @keyframes being-inhaled {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.8); }
+        100% { transform: scale(1); }
+    }
+    
+    @keyframes gameOverAppear {
+        0% { transform: scale(0.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+`;
+document.head.appendChild(style);
+
+// Update the resetGame function to properly reset game speed
+function resetGame() {
+    // Reset game speed
+    gameSpeed = 1;
+    lastFrameTime = 0;
+    
+    // Reset game state
+    gameState.screen = 'select';
+    gameState.gameRunning = false;
+    gameState.players.p1.character = null;
+    gameState.players.p1.selected = false;
+    gameState.players.p2.character = null;
+    gameState.players.p2.selected = false;
+    gameState.currentPlayer = 1;
+    gameState.p1Health = 100;
+    gameState.p2Health = 100;
+    gameState.p1Ability = null;
+    gameState.p2Ability = null;
+    
+    // Reset fighters
+    fighters.p1.x = 300;
+    fighters.p1.y = 300;
+    fighters.p1.vx = 0;
+    fighters.p1.vy = 0;
+    fighters.p1.facing = 1;
+    fighters.p1.attacking = false;
+    fighters.p1.stunned = false;
+    fighters.p1.inhaling = false;
+    fighters.p1.hasInhaled = false;
+    fighters.p1.inhaledAbility = null;
+    fighters.p1.canJump = true;
+    fighters.p1.visible = true;
+    fighters.p1.damage = 0;
+    
+    fighters.p2.x = 500;
+    fighters.p2.y = 300;
+    fighters.p2.vx = 0;
+    fighters.p2.vy = 0;
+    fighters.p2.facing = -1;
+    fighters.p2.attacking = false;
+    fighters.p2.stunned = false;
+    fighters.p2.inhaling = false;
+    fighters.p2.hasInhaled = false;
+    fighters.p2.inhaledAbility = null;
+    fighters.p2.canJump = true;
+    fighters.p2.visible = true;
+    fighters.p2.damage = 0;
+    
+    // Clear projectiles and effects
+    projectiles = [];
+    if (inhaleEffect) {
+        inhaleEffect.remove();
+        inhaleEffect = null;
+    }
+    
+    // Reset visual elements
+    const fighter1El = document.getElementById('fighter1');
+    const fighter2El = document.getElementById('fighter2');
+    
+    if (fighter1El) {
+        fighter1El.style.display = 'flex';
+        fighter1El.style.opacity = '1';
+        fighter1El.style.left = fighters.p1.x + 'px';
+        fighter1El.style.top = fighters.p1.y + 'px';
+        fighter1El.style.transform = `scaleX(${fighters.p1.facing})`;
+        fighter1El.style.display = 'flex';
+        fighter1El.style.opacity = '1';
+    }
+    
+    if (fighter2El) {
+        fighter2El.style.display = 'flex';
+        fighter2El.style.opacity = '1';
+        fighter2El.style.left = fighters.p2.x + 'px';
+        fighter2El.style.top = fighters.p2.y + 'px';
+        fighter2El.style.transform = `scaleX(${fighters.p2.facing})`;
+        fighter2El.style.display = 'flex';
+        fighter2El.style.opacity = '1';
+    }
+    
+    // Update health and damage displays
+    document.getElementById('p1Damage').textContent = '0%';
+    document.getElementById('p2Damage').textContent = '0%';
+    document.getElementById('p1Health').style.width = '100%';
+    document.getElementById('p2Health').style.width = '100%';
+    
+    // Hide game over screen and game screen
+    const gameOver = document.getElementById('gameOver');
+    const gameScreen = document.getElementById('gameScreen');
+    const characterSelect = document.getElementById('characterSelect');
+    
+    if (gameOver) gameOver.style.display = 'none';
+    if (gameScreen) gameScreen.style.display = 'none';
+    if (characterSelect) characterSelect.style.display = 'flex';
+    
+    // Reset character selection UI
+    document.querySelectorAll('.character-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    document.getElementById('p1Selected').textContent = '?';
+    document.getElementById('p2Selected').textContent = '?';
+    document.getElementById('startGame').disabled = true;
+    
+    // Stop the game loop
+    gameState.gameRunning = false;
+}
+
+function updateHealthBars() {
+    // Implementation of updateHealthBars function
+}
+
+// Add event listener for play again button
+document.addEventListener('DOMContentLoaded', function() {
+    const playAgainBtn = document.querySelector('.restart-button');
+    if (playAgainBtn) {
+        playAgainBtn.addEventListener('click', resetGame);
+    }
+});
+
+// Enhanced function to steal ability and transform Kirby
+function stealAbilityAndTransform(player) {
+    const fighter = fighters[player];
+    const opponent = player === 'p1' ? 'p2' : 'p1';
+    const opponentFighter = fighters[opponent];
+    
+    if (!fighter.hasInhaled || !fighter.inhaledAbility) {
+        console.log('No ability to steal!');
+        return;
+    }
+    
+    // Store the stolen ability permanently
+    const stolenAbility = fighter.inhaledAbility;
+    const opponentCharacter = opponentFighter.character;
+    
+    // Transform Kirby - change his special move to the stolen one
+    characters.kirby.specialMove = stolenAbility;
+    
+    // Create dramatic transformation effect
+    createTransformationEffect(fighter.x, fighter.y, stolenAbility, opponentCharacter);
+    
+    // Show visual feedback of transformation
+    showAbilityStealMessage(player, stolenAbility, opponentCharacter);
+    
+    // Make opponent visible and active again
+    opponentFighter.visible = true;
+    opponentFighter.stunned = false;
+    
+    // Position opponent right next to Kirby
+    opponentFighter.x = fighter.x + (fighter.facing * 80);
+    opponentFighter.y = fighter.y;
+    
+    // Give opponent minimal knockback
+    opponentFighter.vx = fighter.facing * 3;
+    opponentFighter.vy = -3;
+    
+    // Show opponent element again
+    const opponentElement = document.getElementById(`fighter${opponent === 'p1' ? '1' : '2'}`);
+    if (opponentElement) {
+        opponentElement.style.display = 'flex';
+        opponentElement.style.opacity = '1';
+        opponentElement.style.left = opponentFighter.x + 'px';
+        opponentElement.style.top = opponentFighter.y + 'px';
+    }
+    
+    // Reset Kirby's inhale state
+    fighter.hasInhaled = false;
+    fighter.inhaledAbility = null;
+    fighter.inhaling = false;
+    fighter.attacking = false;
+    
+    // Remove visual indicators
+    const fighterElement = document.getElementById(`fighter${player === 'p1' ? '1' : '2'}`);
+    if (fighterElement) {
+        fighterElement.removeAttribute('data-inhaled');
+        fighterElement.classList.remove('has-inhaled');
+        
+        // Add transformation visual effect to Kirby
+        fighterElement.classList.add('transformed');
+        fighterElement.setAttribute('data-stolen-ability', stolenAbility);
+        
+        // Remove transformation effect after a few seconds
+        setTimeout(() => {
+            fighterElement.classList.remove('transformed');
+        }, 3000);
+    }
+    
+    // Update Kirby's appearance or add ability indicator
+    updateKirbyAbilityDisplay(player, stolenAbility, opponentCharacter);
+    
+    console.log(`Kirby stole ${stolenAbility} from ${opponentCharacter}!`);
+    
+    // Force position update
+    updatePositions();
+}
+
+// Create dramatic transformation effect
+function createTransformationEffect(x, y, ability, characterName) {
+    // Main transformation burst
+    const transformEffect = document.createElement('div');
+    transformEffect.className = 'transformation-effect';
+    transformEffect.style.position = 'absolute';
+    transformEffect.style.left = (x - 50) + 'px';
+    transformEffect.style.top = (y - 50) + 'px';
+    transformEffect.style.width = '100px';
+    transformEffect.style.height = '100px';
+    transformEffect.style.background = 'radial-gradient(circle, #ff1493, #ff69b4, #ffb6c1, transparent)';
+    transformEffect.style.borderRadius = '50%';
+    transformEffect.style.animation = 'transformation-burst 1s ease-out forwards';
+    transformEffect.style.pointerEvents = 'none';
+    transformEffect.style.zIndex = '15';
+    
+    document.querySelector('.game-arena').appendChild(transformEffect);
+    
+    // Sparkle effects
+    for (let i = 0; i < 8; i++) {
+        setTimeout(() => {
+            createSparkle(x + (Math.random() - 0.5) * 100, y + (Math.random() - 0.5) * 100);
+        }, i * 100);
+    }
+    
+    // Remove effect after animation
+    setTimeout(() => {
+        if (transformEffect.parentNode) {
+            transformEffect.remove();
+        }
+    }, 1000);
+}
+
+// Create sparkle effects
+function createSparkle(x, y) {
+    const sparkle = document.createElement('div');
+    sparkle.style.position = 'absolute';
+    sparkle.style.left = x + 'px';
+    sparkle.style.top = y + 'px';
+    sparkle.style.width = '6px';
+    sparkle.style.height = '6px';
+    sparkle.style.background = '#ffffff';
+    sparkle.style.borderRadius = '50%';
+    sparkle.style.boxShadow = '0 0 10px #ffffff';
+    sparkle.style.animation = 'sparkle-fade 0.8s ease-out forwards';
+    sparkle.style.pointerEvents = 'none';
+    sparkle.style.zIndex = '12';
+    
+    document.querySelector('.game-arena').appendChild(sparkle);
+    
+    setTimeout(() => {
+        if (sparkle.parentNode) {
+            sparkle.remove();
+        }
+    }, 800);
+}
+
+// Show ability steal message
+function showAbilityStealMessage(player, ability, characterName) {
+    const message = document.createElement('div');
+    message.className = 'ability-steal-message';
+    message.style.position = 'absolute';
+    message.style.top = '20%';
+    message.style.left = '50%';
+    message.style.transform = 'translate(-50%, -50%)';
+    message.style.fontSize = '2rem';
+    message.style.color = '#ff1493';
+    message.style.textShadow = '2px 2px 0px #000';
+    message.style.fontWeight = 'bold';
+    message.style.zIndex = '20';
+    message.style.animation = 'message-popup 2s ease-out forwards';
+    message.style.pointerEvents = 'none';
+    
+    const abilityName = ability.charAt(0).toUpperCase() + ability.slice(1);
+    const charName = characterName.charAt(0).toUpperCase() + characterName.slice(1);
+    message.textContent = `Kirby learned ${abilityName}!`;
+    
+    document.querySelector('.game-arena').appendChild(message);
+    
+    setTimeout(() => {
+        if (message.parentNode) {
+            message.remove();
+        }
+    }, 2000);
+}
+
+// Update Kirby's ability display
+function updateKirbyAbilityDisplay(player, ability, characterName) {
+    const fighterElement = document.getElementById(`fighter${player === 'p1' ? '1' : '2'}`);
+    if (!fighterElement) return;
+    
+    // Remove any existing ability indicator
+    const existingIndicator = fighterElement.querySelector('.ability-indicator');
+    if (existingIndicator) {
+        existingIndicator.remove();
+    }
+    
+    // Add new ability indicator
+    const indicator = document.createElement('div');
+    indicator.className = 'ability-indicator';
+    indicator.style.position = 'absolute';
+    indicator.style.top = '-15px';
+    indicator.style.right = '-15px';
+    indicator.style.width = '25px';
+    indicator.style.height = '25px';
+    indicator.style.borderRadius = '50%';
+    indicator.style.display = 'flex';
+    indicator.style.alignItems = 'center';
+    indicator.style.justifyContent = 'center';
+    indicator.style.fontSize = '12px';
+    indicator.style.fontWeight = 'bold';
+    indicator.style.zIndex = '10';
+    indicator.style.animation = 'ability-glow 2s infinite alternate';
+    
+    // Set indicator style based on stolen ability
+    switch(ability) {
+        case 'fireball':
+            indicator.style.background = 'linear-gradient(45deg, #ff4500, #ff0000)';
+            indicator.style.boxShadow = '0 0 10px #ff0000';
+            indicator.textContent = '🔥';
+            break;
+        case 'thunderbolt':
+            indicator.style.background = 'linear-gradient(45deg, #ffff00, #ffd700)';
+            indicator.style.boxShadow = '0 0 10px #ffff00';
+            indicator.textContent = '⚡';
+            break;
+        default:
+            indicator.style.background = 'linear-gradient(45deg, #ff1493, #ff69b4)';
+            indicator.style.boxShadow = '0 0 10px #ff1493';
+            indicator.textContent = '✨';
+    }
+    
+    fighterElement.appendChild(indicator);
+}
+
+// Enhanced specialAttack function to use stolen abilities
+function enhancedSpecialAttack(player) {
+    const fighter = fighters[player];
+    const character = fighter.character;
+
+    if (fighter.stunned || fighter.attacking) return;
+
+    fighter.attacking = true;
+    
+    // For Kirby, check if he has a stolen ability
+    let currentSpecialMove;
+    if (character === 'kirby' && characters.kirby.specialMove !== 'inhale') {
+        currentSpecialMove = characters.kirby.specialMove;
+    } else {
+        currentSpecialMove = characters[character].specialMove;
+    }
+    
+    const specialMove = specialMoves[currentSpecialMove];
+
+    // Create projectile based on current ability
+    if (currentSpecialMove === 'fireball' || currentSpecialMove === 'thunderbolt') {
+        const projectile = {
+            x: fighter.x + (fighter.facing * 50),
+            y: fighter.y + 25,
+            vx: fighter.facing * 12,
+            vy: currentSpecialMove === 'thunderbolt' ? -1 : 0,
+            damage: specialMove.damage,
+            owner: player,
+            type: currentSpecialMove,
+            bounces: 0,
+            maxBounces: currentSpecialMove === 'thunderbolt' ? 3 : 0,
+            element: createProjectileElement(specialMove, currentSpecialMove)
+        };
+        
+        if (projectile.element) {
+            projectile.element.style.left = projectile.x + 'px';
+            projectile.element.style.top = projectile.y + 'px';
+            projectile.element.style.display = 'block';
+        }
+        
+        projectiles.push(projectile);
+        createEffect(fighter.x + (fighter.facing * 40), fighter.y, specialMove.effect);
+        
+        // Show special message for Kirby using stolen ability
+        if (character === 'kirby' && currentSpecialMove !== 'inhale') {
+            showKirbyUsingAbility(player, currentSpecialMove);
+        }
+    }
+
+    setTimeout(() => {
+        fighter.attacking = false;
+    }, 500);
+}
+
+// Show message when Kirby uses stolen ability
+function showKirbyUsingAbility(player, ability) {
+    const message = document.createElement('div');
+    message.className = 'kirby-ability-use';
+    message.style.position = 'absolute';
+    message.style.top = '30%';
+    message.style.left = '50%';
+    message.style.transform = 'translate(-50%, -50%)';
+    message.style.fontSize = '1.5rem';
+    message.style.color = '#ff69b4';
+    message.style.textShadow = '1px 1px 0px #000';
+    message.style.fontWeight = 'bold';
+    message.style.zIndex = '18';
+    message.style.animation = 'quick-popup 1s ease-out forwards';
+    message.style.pointerEvents = 'none';
+    
+    const abilityName = ability.charAt(0).toUpperCase() + ability.slice(1);
+    message.textContent = `Copy Ability: ${abilityName}!`;
+    
+    document.querySelector('.game-arena').appendChild(message);
+    
+    setTimeout(() => {
+        if (message.parentNode) {
+            message.remove();
+        }
+    }, 1000);
+}
+
+// Add CSS animations for all the new effects
+const kirbyAbilityStyles = document.createElement('style');
+kirbyAbilityStyles.textContent = `
+    @keyframes transformation-burst {
+        0% { 
+            transform: scale(0.5) rotate(0deg); 
+            opacity: 1; 
+        }
+        50% { 
+            transform: scale(2) rotate(180deg); 
+            opacity: 0.8; 
+        }
+        100% { 
+            transform: scale(3) rotate(360deg); 
+            opacity: 0; 
+        }
+    }
+    
+    @keyframes sparkle-fade {
+        0% { 
+            transform: scale(0) rotate(0deg); 
+            opacity: 1; 
+        }
+        50% { 
+            transform: scale(1.5) rotate(180deg); 
+            opacity: 0.8; 
+        }
+        100% { 
+            transform: scale(0) rotate(360deg); 
+            opacity: 0; 
+        }
+    }
+    
+    @keyframes message-popup {
+        0% { 
+            transform: translate(-50%, -50%) scale(0.5); 
+            opacity: 0; 
+        }
+        20% { 
+            transform: translate(-50%, -50%) scale(1.2); 
+            opacity: 1; 
+        }
+        80% { 
+            transform: translate(-50%, -50%) scale(1); 
+            opacity: 1; 
+        }
+        100% { 
+            transform: translate(-50%, -50%) scale(0.8); 
+            opacity: 0; 
+        }
+    }
+    
+    @keyframes quick-popup {
+        0% { 
+            transform: translate(-50%, -50%) scale(0.8); 
+            opacity: 0; 
+        }
+        30% { 
+            transform: translate(-50%, -50%) scale(1.1); 
+            opacity: 1; 
+        }
+        70% { 
+            transform: translate(-50%, -50%) scale(1); 
+            opacity: 1; 
+        }
+        100% { 
+            transform: translate(-50%, -50%) scale(0.9); 
+            opacity: 0; 
+        }
+    }
+    
+    @keyframes ability-glow {
+        0% { 
+            transform: scale(1); 
+            filter: brightness(1); 
+        }
+        100% { 
+            transform: scale(1.1); 
+            filter: brightness(1.3); 
+        }
+    }
+    
+    .fighter.transformed {
+        animation: kirby-transform 0.5s ease-in-out;
+        filter: brightness(1.2);
+    }
+    
+    @keyframes kirby-transform {
+        0% { transform: scale(1) rotate(0deg); }
+        25% { transform: scale(1.2) rotate(5deg); }
+        50% { transform: scale(0.9) rotate(-5deg); }
+        75% { transform: scale(1.1) rotate(3deg); }
+        100% { transform: scale(1) rotate(0deg); }
+    }
+    
+    .ability-indicator {
+        pointer-events: none;
+        user-select: none;
+    }
+`;
+document.head.appendChild(kirbyAbilityStyles);
+
+// Replace the original specialAttack function with the enhanced version
+window.specialAttack = enhancedSpecialAttack;
+
+// Add touch/click event handlers for on-screen controls
+function setupOnScreenControls() {
+    // Movement buttons
+    const upBtn = document.getElementById('upBtn');
+    const leftBtn = document.getElementById('leftBtn');
+    const rightBtn = document.getElementById('rightBtn');
+    const downBtn = document.getElementById('downBtn');
+    
+    // Action buttons
+    const attackBtn = document.getElementById('attackBtn');
+    const specialBtn = document.getElementById('specialBtn');
+
+    // Movement button handlers
+    function handleMovementButton(button, key, isPressed) {
+        button.addEventListener('mousedown', () => keys[key] = true);
+        button.addEventListener('touchstart', () => keys[key] = true);
+        button.addEventListener('mouseup', () => keys[key] = false);
+        button.addEventListener('touchend', () => keys[key] = false);
+        button.addEventListener('mouseleave', () => keys[key] = false);
+    }
+
+    // Set up movement buttons
+    handleMovementButton(upBtn, 'w', true);
+    handleMovementButton(leftBtn, 'a', true);
+    handleMovementButton(rightBtn, 'd', true);
+    handleMovementButton(downBtn, 's', true);
+
+    // Action button handlers
+    function handleActionButton(button, key) {
+        button.addEventListener('mousedown', () => {
+            keys[key] = true;
+            if (key === 'f') {
+                const p1Fighter = fighters.p1;
+                if (p1Fighter.character === 'kirby' && p1Fighter.hasInhaled) {
+                    spitOutWithoutStealing('p1');
+                } else if (!p1Fighter.attacking && !p1Fighter.stunned) {
+                    attack('p1');
+                }
+            } else if (key === 'g') {
+                keys.gHeld = true;
+                const p1Fighter = fighters.p1;
+                if (p1Fighter.character === 'kirby') {
+                    if (p1Fighter.hasInhaled) {
+                        stealAbilityAndTransform('p1');
+                    } else if (!p1Fighter.attacking) {
+                        if (characters.kirby.specialMove !== 'inhale') {
+                            enhancedSpecialAttack('p1');
+                        } else {
+                            startInhale('p1');
+                        }
+                    }
+                } else {
+                    specialAttack('p1');
+                }
+            }
+        });
+
+        button.addEventListener('mouseup', () => {
+            keys[key] = false;
+            if (key === 'g') keys.gHeld = false;
+        });
+
+        button.addEventListener('touchstart', () => {
+            keys[key] = true;
+            if (key === 'f') {
+                const p1Fighter = fighters.p1;
+                if (p1Fighter.character === 'kirby' && p1Fighter.hasInhaled) {
+                    spitOutWithoutStealing('p1');
+                } else if (!p1Fighter.attacking && !p1Fighter.stunned) {
+                    attack('p1');
+                }
+            } else if (key === 'g') {
+                keys.gHeld = true;
+                const p1Fighter = fighters.p1;
+                if (p1Fighter.character === 'kirby') {
+                    if (p1Fighter.hasInhaled) {
+                        stealAbilityAndTransform('p1');
+                    } else if (!p1Fighter.attacking) {
+                        if (characters.kirby.specialMove !== 'inhale') {
+                            enhancedSpecialAttack('p1');
+                        } else {
+                            startInhale('p1');
+                        }
+                    }
+                } else {
+                    specialAttack('p1');
+                }
+            }
+        });
+
+        button.addEventListener('touchend', () => {
+            keys[key] = false;
+            if (key === 'g') keys.gHeld = false;
+        });
+    }
+
+    // Set up action buttons
+    handleActionButton(attackBtn, 'f');
+    handleActionButton(specialBtn, 'g');
+}
+
+
+    </script>
+<script id="jsbin-javascript">
+// Game State 
+let gameState = { 
+    screen: 'select', // 'select' or 'game' 
+    players: { 
+        p1: { character: null, selected: false }, 
+        p2: { character: null, selected: false } 
+    }, 
+    currentPlayer: 1, 
+    gameTime: 180, // 3 minutes in seconds 
+    gameRunning: false, 
+    gameMode: 'cpu',
+    cpuDifficulty: 'normal', 
+    p1Health: 100,
+    p2Health: 100,
+    p1Ability: null,
+    p2Ability: null
+}; 
+
+// Character data - add jump counts 
+const characters = { 
+    mario: { name: 'Mario', emoji: '🍄', color: 'mario', specialMove: 'fireball', jumps: 2 }, 
+    pikachu: { name: 'Pikachu', emoji: '⚡', color: 'pikachu', specialMove: 'thunderbolt', jumps: 3 }, 
+    kirby: { name: 'Kirby', emoji: '🌸', color: 'kirby', specialMove: 'inhale', jumps: 5 }, 
+    random: { name: 'Random', emoji: '❓', color: 'random' } 
+}; 
+
+// CPU AI state 
+let cpuAI = { 
+    nextAction: 0, 
+    actionCooldown: 0, 
+    targetX: 400, 
+    aggression: 0.5, 
+    lastPlayerX: 0, 
+    comboCooldown: 0 
+}; 
+
+// Fighter game state - update to include jumps 
+let fighters = { 
+    p1: { 
+        x: 300, y: 300, vx: 0, vy: 0, 
+        damage: 0, health: 100, 
+        grounded: false, facing: 1, 
+        character: null, canJump: true, 
+        attacking: false, stunned: false, 
+        jumpsLeft: 2, maxJumps: 2,
+        inhaling: false,
+        hasInhaled: false,
+        inhaledAbility: null
+    }, 
+    p2: { 
+        x: 500, y: 300, vx: 0, vy: 0, 
+        damage: 0, health: 100, 
+        grounded: false, facing: -1, 
+        character: null, canJump: true, 
+        attacking: false, stunned: false, 
+        jumpsLeft: 2, maxJumps: 2,
+        inhaling: false,
+        hasInhaled: false,
+        inhaledAbility: null
+    } 
+}; 
+
+let projectiles = []; 
+let effects = []; 
+let keys = {};
+let inhaleEffect = null;
+
+// Add game speed control
+let gameSpeed = 1;
+let lastFrameTime = 0;
+
+// Add SpecialMove class at the top of the file, after the game state
+class SpecialMove {
+    constructor(name, type, damage, speed, color, effect) {
+        this.name = name;
+        this.type = type;
+        this.damage = damage;
+        this.speed = speed;
+        this.color = color;
+        this.effect = effect;
+    }
+}
+
+// Define special moves
+const specialMoves = {
+    fireball: new SpecialMove(
+        'Fireball',
+        'projectile',
+        12,
+        8,
+        '#ff0000',
+        'fireball'
+    ),
+    thunderbolt: new SpecialMove(
+        'Thunder Jolt',
+        'projectile',
+        10,
+        6,
+        '#ffff00',
+        'thunder'
+    ),
+    inhale: new SpecialMove(
+        'Inhale',
+        'ability',
+        0,
+        0,
+        '#ff69b4',
+        'inhale'
+    )
+};
+
+// Debug function
+
+// Character Selection Logic 
+document.querySelectorAll('.character-card').forEach(card => { 
+    card.addEventListener('click', () => { 
+        const character = card.dataset.character; 
+        selectCharacter(character); 
+    }); 
+}); 
+
+// Game Mode Selection 
+document.querySelectorAll('.mode-button').forEach(button => { 
+    button.addEventListener('click', () => { 
+        document.querySelectorAll('.mode-button').forEach(b => b.classList.remove('active')); 
+        button.classList.add('active'); 
+        gameState.gameMode = button.dataset.mode; 
+        
+        // Update UI based on mode 
+        if (gameState.gameMode === 'cpu') { 
+            document.querySelector('.player-info:last-child h3').textContent = 'CPU'; 
+        } else { 
+            document.querySelector('.player-info:last-child h3').textContent = 'Player 2'; 
+        } 
+    }); 
+}); 
+
+function selectCharacter(character) { 
+    const currentPlayerKey = gameState.currentPlayer === 1 ? 'p1' : 'p2'; 
+    
+    // Handle random selection 
+    if (character === 'random') { 
+        const availableChars = ['mario', 'pikachu', 'kirby']; 
+        character = availableChars[Math.floor(Math.random() * availableChars.length)]; 
+    } 
+    
+    // Remove previous selection 
+    document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected')); 
+    
+    // Set new selection 
+    gameState.players[currentPlayerKey].character = character; 
+    gameState.players[currentPlayerKey].selected = true; 
+    
+    // Update UI 
+    const selectedDiv = document.getElementById(currentPlayerKey + 'Selected'); 
+    selectedDiv.textContent = characters[character].emoji; 
+    selectedDiv.className = `selected-character ${characters[character].color}`; 
+    
+    // Switch to next player or enable start 
+    if (gameState.currentPlayer === 1 && !gameState.players.p2.selected) { 
+        if (gameState.gameMode === 'cpu') { 
+            gameState.currentPlayer = 2; 
+            const cpuChars = ['mario', 'pikachu', 'kirby']; 
+            const cpuChar = cpuChars[Math.floor(Math.random() * cpuChars.length)]; 
+            selectCharacter(cpuChar); 
+        } else { 
+            gameState.currentPlayer = 2; 
+        } 
+    } else if (gameState.players.p1.selected && gameState.players.p2.selected) { 
+        document.getElementById('startGame').disabled = false; 
+    } 
+}
+
+document.getElementById('startGame').addEventListener('click', startGame);
+
+function startGame() {
+    gameState.screen = 'game';
+    gameState.gameMode = 'cpu';
+    
+    // Reset game speed
+    gameSpeed = 1;
+    lastFrameTime = 0;
+    
+    // First render the game screen to ensure elements are visible
+    document.getElementById('characterSelect').style.display = 'none';
+    document.getElementById('gameScreen').style.display = 'block';
+    document.getElementById('gameOver').style.display = 'none';
+    
+    // Initialize fighters
+    fighters.p1.character = gameState.players.p1.character;
+    fighters.p2.character = gameState.players.p2.character;
+    
+    // Set character-specific attributes
+    fighters.p1.maxJumps = characters[fighters.p1.character].jumps;
+    fighters.p1.jumpsLeft = fighters.p1.maxJumps;
+    fighters.p2.maxJumps = characters[fighters.p2.character].jumps;
+    fighters.p2.jumpsLeft = fighters.p2.maxJumps;
+    
+    // Update UI
+    const p1Char = characters[fighters.p1.character];
+    const p2Char = characters[fighters.p2.character];
+    
+    document.getElementById('p1Avatar').textContent = p1Char.emoji;
+    document.getElementById('p1Avatar').className = `player-avatar ${p1Char.color}`;
+    document.getElementById('p2Avatar').textContent = p2Char.emoji;
+    document.getElementById('p2Avatar').className = `player-avatar ${p2Char.color}`;
+    
+    document.getElementById('fighter1').textContent = p1Char.emoji;
+    document.getElementById('fighter1').className = `fighter player1 ${p1Char.color}`;
+    document.getElementById('fighter2').textContent = p2Char.emoji;
+    document.getElementById('fighter2').className = `fighter player2 ${p2Char.color}`;
+    
+    // Update player labels
+    document.querySelector('.player-info:last-child h3').textContent = 'CPU';
+    
+    // Force a layout calculation to ensure elements are rendered
+    document.body.offsetHeight;
+    
+    // Get platform positions using getBoundingClientRect for more accurate positioning
+    const mainPlatform = document.querySelector('.main-platform');
+    const platformRect = mainPlatform.getBoundingClientRect();
+    const arenaRect = document.querySelector('.game-arena').getBoundingClientRect();
+    
+    // Calculate relative position within the arena
+    const platformLeft = platformRect.left - arenaRect.left;
+    const platformTop = platformRect.top - arenaRect.top;
+    const platformWidth = platformRect.width;
+    
+    // Player 1 on the left side
+    fighters.p1.x = platformLeft + (platformWidth * 0.25);
+    fighters.p1.y = platformTop - 80; // Position above the platform
+    fighters.p1.vy = 0;
+    fighters.p1.vx = 0;
+    fighters.p1.facing = 1; // Face right
+    fighters.p1.grounded = true;
+    
+    // Player 2 on the right side
+    fighters.p2.x = platformLeft + (platformWidth * 0.75);
+    fighters.p2.y = platformTop - 80; // Position above the platform
+    fighters.p2.vy = 0;
+    fighters.p2.vx = 0;
+    fighters.p2.facing = -1; // Face left
+    fighters.p2.grounded = true;
+    
+    // Position fighter elements directly
+    const fighter1El = document.getElementById('fighter1');
+    const fighter2El = document.getElementById('fighter2');
+    
+    fighter1El.style.left = fighters.p1.x + 'px';
+    fighter1El.style.top = fighters.p1.y + 'px';
+    fighter2El.style.left = fighters.p2.x + 'px';
+    fighter2El.style.top = fighters.p2.y + 'px';
+    
+    // Fallback positioning if getBoundingClientRect doesn't work as expected
+    if (platformLeft === 0 || platformTop === 0) {
+        // Use hardcoded values as fallback
+        const arenaWidth = document.querySelector('.game-arena').offsetWidth;
+        const arenaHeight = document.querySelector('.game-arena').offsetHeight;
+        
+        // Main platform is typically at the bottom center
+        fighters.p1.x = arenaWidth * 0.3;
+        fighters.p1.y = arenaHeight - 130; // 100px from bottom + fighter height
+        fighters.p2.x = arenaWidth * 0.7;
+        fighters.p2.y = arenaHeight - 130;
+        
+        fighter1El.style.left = fighters.p1.x + 'px';
+        fighter1El.style.top = fighters.p1.y + 'px';
+        fighter2El.style.left = fighters.p2.x + 'px';
+        fighter2El.style.top = fighters.p2.y + 'px';
+    }
+    
+    // Start countdown
+    startCountdown();
+    
+    setupOnScreenControls();
+}
+
+function startCountdown() {
+    const gameArena = document.getElementById('gameArena');
+    let count = 3;
+    
+    // Create countdown element
+    const countdownEl = document.createElement('div');
+    countdownEl.className = 'countdown';
+    countdownEl.style.position = 'absolute';
+    countdownEl.style.top = '50%';
+    countdownEl.style.left = '50%';
+    countdownEl.style.transform = 'translate(-50%, -50%)';
+    countdownEl.style.fontSize = '8rem';
+    countdownEl.style.color = 'white';
+    countdownEl.style.textShadow = '3px 3px 0px #000';
+    countdownEl.style.zIndex = '100';
+    gameArena.appendChild(countdownEl);
+    
+    // Start game loop immediately but don't allow movement yet
+    gameState.gameRunning = false;
+    gameLoop(); // Make sure gameLoop is called here
+    
+    // Start countdown
+    const countdownInterval = setInterval(() => {
+        if (count > 0) {
+            countdownEl.textContent = count;
+            countdownEl.style.animation = 'countdownPulse 1s ease-in-out';
+            if (typeof playSound === 'function') playSound('countdown');
+            count--;
+        } else {
+            countdownEl.textContent = 'FIGHT!';
+            countdownEl.style.animation = 'countdownPulse 1s ease-in-out';
+            if (typeof playSound === 'function') playSound('fight');
+            
+            // Start the game after countdown
+            setTimeout(() => {
+                countdownEl.remove();
+                gameState.gameRunning = true; // Enable movement
+                startGameTimer();
+            }, 1000);
+            
+            clearInterval(countdownInterval);
+        }
+    }, 1000);
+}
+
+function startGameTimer() {
+    const timer = setInterval(() => {
+        if (!gameState.gameRunning) {
+            clearInterval(timer);
+            return;
+        }
+
+        gameState.gameTime--;
+        const minutes = Math.floor(gameState.gameTime / 60);
+        const seconds = gameState.gameTime % 60;
+        document.getElementById('gameTimer').textContent =
+            `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        if (gameState.gameTime <= 0) {
+            endGame('Time\'s up!');
+            clearInterval(timer);
+        }
+    }, 1000);
+}
+
+// Update input handling for all characters
+document.addEventListener('keydown', (e) => {
+    const key = e.key.toLowerCase();
+    keys[key] = true;
+    
+    // Special handling for jump keys
+    if (key === 'w') keys.wPressed = true;
+    if (key === 'arrowup') keys.upPressed = true;
+    
+    // Handle special attacks (G key press) - Enhanced version
+    if (key === 'g' && !keys.gHeld) {
+        keys.gHeld = true;
+        const p1Fighter = fighters.p1;
+        
+        if (p1Fighter.character === 'kirby') {
+            if (p1Fighter.hasInhaled) {
+                // If Kirby has inhaled someone, steal their ability and eject them
+                stealAbilityAndTransform('p1');
+            } else if (!p1Fighter.attacking) {
+                // Check if Kirby has a stolen ability
+                if (characters.kirby.specialMove !== 'inhale') {
+                    // Use the stolen ability
+                    enhancedSpecialAttack('p1');
+                } else {
+                    // If no stolen ability, use inhale
+                    startInhale('p1');
+                }
+            }
+        } else {
+            // For other characters, use their special attack
+            specialAttack('p1');
+        }
+    }
+    
+    // Handle normal attacks (F key press)
+    if (key === 'f') {
+        const p1Fighter = fighters.p1;
+        if (p1Fighter.character === 'kirby' && p1Fighter.hasInhaled) {
+            spitOutWithoutStealing('p1');
+        } else if (!p1Fighter.attacking && !p1Fighter.stunned) {
+            attack('p1');
+        }
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    const key = e.key.toLowerCase();
+    keys[key] = false;
+    
+    // Reset jump key flags
+    if (key === 'w') keys.wPressed = false;
+    if (key === 'arrowup') keys.upPressed = false;
+    
+    // Handle Kirby's inhale end (G key release)
+    if (key === 'g') {
+        keys.gHeld = false;
+        const p1Fighter = fighters.p1;
+        if (p1Fighter.character === 'kirby' && p1Fighter.inhaling && !p1Fighter.hasInhaled) {
+            stopInhale('p1');
+        }
+    }
+});
+
+// New function to steal ability and eject opponent
+function stealAbilityAndEject(player) {
+    const fighter = fighters[player];
+    const opponent = player === 'p1' ? 'p2' : 'p1';
+    const opponentFighter = fighters[opponent];
+    
+    // Steal the opponent's ability permanently
+    if (fighter.inhaledAbility) {
+        // Change Kirby's special move to the stolen ability
+        characters.kirby.specialMove = fighter.inhaledAbility;
+        
+        // Create visual effect for ability steal
+        createEffect(fighter.x, fighter.y, 'steal');
+    }
+    
+    // Make opponent visible and active again
+    opponentFighter.visible = true;
+    opponentFighter.stunned = false;
+    
+    // Position opponent right next to Kirby (not launched away)
+    opponentFighter.x = fighter.x + (fighter.facing * 60); // Right next to Kirby
+    opponentFighter.y = fighter.y; // Same height
+    
+    // Give opponent minimal velocity (just enough to separate them)
+    opponentFighter.vx = fighter.facing * 2; // Very small push
+    opponentFighter.vy = -2; // Small upward movement
+    
+    // Show opponent element again
+    const opponentElement = document.getElementById(`fighter${opponent === 'p1' ? '1' : '2'}`);
+    if (opponentElement) {
+        opponentElement.style.display = 'flex';
+        opponentElement.style.opacity = '1';
+        opponentElement.style.left = opponentFighter.x + 'px';
+        opponentElement.style.top = opponentFighter.y + 'px';
+    }
+    
+    // Reset Kirby's state
+    fighter.hasInhaled = false;
+    fighter.inhaledAbility = null;
+    fighter.inhaling = false;
+    fighter.attacking = false;
+    
+    // Remove visual indicator
+    const fighterElement = document.getElementById(`fighter${player === 'p1' ? '1' : '2'}`);
+    if (fighterElement) {
+        fighterElement.removeAttribute('data-inhaled');
+        fighterElement.classList.remove('has-inhaled');
+    }
+    
+    // Create eject effect
+    createEffect(opponentFighter.x, opponentFighter.y, 'ability-steal');
+    
+    // Force a position update
+    updatePositions();
+}
+
+// New function to spit out without stealing ability (for F key)
+function spitOutWithoutStealing(player) {
+    const fighter = fighters[player];
+    const opponent = player === 'p1' ? 'p2' : 'p1';
+    const opponentFighter = fighters[opponent];
+    
+    
+    
+    // Make opponent visible and active again
+    opponentFighter.visible = true;
+    opponentFighter.stunned = false;
+    
+    // Launch opponent away from Kirby with more force
+    opponentFighter.x = fighter.x + (fighter.facing * 80);
+    opponentFighter.y = fighter.y;
+    opponentFighter.vx = fighter.facing * 12; // Strong launch
+    opponentFighter.vy = -8;
+    
+    // Show opponent element again
+    const opponentElement = document.getElementById(`fighter${opponent === 'p1' ? '1' : '2'}`);
+    if (opponentElement) {
+        opponentElement.style.display = 'flex';
+        opponentElement.style.opacity = '1';
+        opponentElement.style.left = opponentFighter.x + 'px';
+        opponentElement.style.top = opponentFighter.y + 'px';
+    }
+    
+    // Deal damage to ejected opponent
+    hit(opponent, 15);
+    
+    // Reset Kirby's state (without stealing ability)
+    fighter.hasInhaled = false;
+    fighter.inhaledAbility = null;
+    fighter.inhaling = false;
+        fighter.attacking = false;
+    
+    // Remove visual indicator
+    const fighterElement = document.getElementById(`fighter${player === 'p1' ? '1' : '2'}`);
+    if (fighterElement) {
+        fighterElement.removeAttribute('data-inhaled');
+        fighterElement.classList.remove('has-inhaled');
+    }
+    
+    // Create spit-out effect
+    createEffect(opponentFighter.x, opponentFighter.y, 'spit-out');
+    
+    // Force a position update
+    updatePositions();
+}
+
+// Update the specialAttack function to properly handle all characters
+function specialAttack(player) {
+    const fighter = fighters[player];
+    const character = fighter.character;
+
+    if (fighter.stunned || fighter.attacking) return;
+
+    fighter.attacking = true;
+    const currentSpecialMove = characters[character].specialMove;
+    const specialMove = specialMoves[currentSpecialMove];
+
+    // Create projectile based on character
+    if (currentSpecialMove === 'fireball' || currentSpecialMove === 'thunderbolt') {
+        const projectile = {
+            x: fighter.x + (fighter.facing * 30),
+            y: fighter.y + 20,
+            vx: fighter.facing * 20, // Much higher speed for better movement
+            vy: currentSpecialMove === 'thunderbolt' ? -2 : 0,
+            damage: specialMove.damage,
+            owner: player,
+            type: currentSpecialMove,
+            bounces: 0,
+            maxBounces: currentSpecialMove === 'thunderbolt' ? 3 : 0,
+            element: createProjectileElement(specialMove, currentSpecialMove)
+        };
+        
+        // Position the projectile element
+        if (projectile.element) {
+            projectile.element.style.left = projectile.x + 'px';
+            projectile.element.style.top = projectile.y + 'px';
+        }
+        
+        projectiles.push(projectile);
+        createEffect(fighter.x + (fighter.facing * 40), fighter.y, specialMove.effect);
+    }
+
+    setTimeout(() => {
+        fighter.attacking = false;
+    }, 500);
+}
+
+// Update createProjectileElement to differentiate between fireball and thunderbolt
+function createProjectileElement(specialMove, moveType) {
+    const element = document.createElement('div');
+    element.className = `projectile ${moveType}`;
+    element.style.position = 'absolute';
+    element.style.width = '30px';
+    element.style.height = '30px';
+    element.style.borderRadius = '50%';
+    element.style.pointerEvents = 'none';
+    element.style.zIndex = '5';
+    element.style.display = 'block';
+    
+    // Different styling for different projectiles
+    if (moveType === 'fireball') {
+        element.style.background = 'radial-gradient(circle, #ff4500, #ff0000)';
+        element.style.boxShadow = '0 0 20px #ff0000, inset 0 0 10px #ffff00';
+        element.style.border = '2px solid #ffff00';
+        // Add flame effect
+        element.innerHTML = '🔥';
+        element.style.fontSize = '20px';
+        element.style.display = 'flex';
+        element.style.alignItems = 'center';
+        element.style.justifyContent = 'center';
+    } else if (moveType === 'thunderbolt') {
+        element.style.background = 'radial-gradient(circle, #ffff00, #ffd700)';
+        element.style.boxShadow = '0 0 25px #ffff00, inset 0 0 15px #ffffff';
+        element.style.border = '2px solid #ffffff';
+        // Add lightning effect
+        element.innerHTML = '⚡';
+        element.style.fontSize = '20px';
+        element.style.display = 'flex';
+        element.style.alignItems = 'center';
+        element.style.justifyContent = 'center';
+        // Add crackling animation
+        element.style.animation = 'lightning-crackle 0.1s infinite alternate';
+    }
+
+    // Add to game arena
+    const gameArena = document.querySelector('.game-arena');
+    if (gameArena) {
+        gameArena.appendChild(element);
+    }
+
+    return element;
+}
+
+// Update updateProjectiles to handle different projectile types correctly
+function updateProjectiles() {
+    // Update projectile positions
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        const projectile = projectiles[i];
+        
+        // Update position based on velocity
+        projectile.x += projectile.vx;
+        projectile.y += projectile.vy;
+        
+        // Update projectile visual element
+        if (projectile.element) {
+            projectile.element.style.left = projectile.x + 'px';
+            projectile.element.style.top = projectile.y + 'px';
+            projectile.element.style.display = 'block';
+        }
+        
+        // Apply different physics based on projectile type
+        if (projectile.type === 'thunderbolt') {
+            // Thunder jolts have gravity and bounce
+            projectile.vy += 0.4; // Gravity effect
+            
+            // Check for ground collision and bounce
+            const arenaRect = document.querySelector('.game-arena').getBoundingClientRect();
+            const platforms = document.querySelectorAll('.platform');
+            let bounced = false;
+            
+            platforms.forEach(platform => {
+                const platformRect = platform.getBoundingClientRect();
+                const platformTop = platformRect.top - arenaRect.top;
+                const platformLeft = platformRect.left - arenaRect.left;
+                const platformWidth = platformRect.width;
+                
+                // Check if projectile hits platform from above
+                if (projectile.y + 15 >= platformTop && 
+                    projectile.y + 15 <= platformTop + 20 &&
+                    projectile.x + 15 > platformLeft && 
+                    projectile.x + 15 < platformLeft + platformWidth &&
+                    projectile.vy > 0 && 
+                    projectile.bounces < projectile.maxBounces) {
+                    
+                    projectile.y = platformTop - 15;
+                    projectile.vy = -Math.abs(projectile.vy) * 0.8; // Bounce with some energy loss
+                    projectile.bounces++;
+                    bounced = true;
+                    
+                    // Create bounce effect
+                    createEffect(projectile.x, projectile.y, 'thunder');
+                }
+            });
+            
+            // Remove after max bounces
+            if (projectile.bounces >= projectile.maxBounces && projectile.vy > 0) {
+                if (projectile.element) {
+                    projectile.element.remove();
+                }
+                projectiles.splice(i, 1);
+                continue;
+            }
+        }
+        
+        // Remove projectiles that are out of bounds
+        const arenaRect = document.querySelector('.game-arena').getBoundingClientRect();
+        if (projectile.x < -50 || projectile.x > arenaRect.width + 50 || 
+            projectile.y < -50 || projectile.y > arenaRect.height + 50) {
+            if (projectile.element) {
+                projectile.element.remove();
+            }
+            projectiles.splice(i, 1);
+            continue;
+        }
+        
+        // Check for collisions with players
+        const targetPlayer = projectile.owner === 'p1' ? 'p2' : 'p1';
+        const targetFighter = fighters[targetPlayer];
+        
+        // Only check collision with target player, not the owner
+        if (targetFighter.visible !== false && 
+            Math.abs(projectile.x - targetFighter.x) < 40 &&
+            Math.abs(projectile.y - targetFighter.y) < 50) {
+            
+            // Different hit effects for different projectiles
+            if (projectile.type === 'fireball') {
+                hit(targetPlayer, projectile.damage);
+                createEffect(projectile.x, projectile.y, 'fireball');
+                // Add burn effect
+                targetFighter.vx += projectile.vx * 0.3; // Knockback in projectile direction
+            } else if (projectile.type === 'thunderbolt') {
+                hit(targetPlayer, projectile.damage);
+                createEffect(projectile.x, projectile.y, 'thunder');
+                // Add electric stun effect
+                targetFighter.stunned = true;
+                setTimeout(() => {
+                    targetFighter.stunned = false;
+                }, 500);
+            }
+            
+            if (projectile.element) {
+                projectile.element.remove();
+            }
+            projectiles.splice(i, 1);
+        }
+    }
+}
+
+// Add CSS animations for lightning effect
+const lightningStyles = document.createElement('style');
+lightningStyles.textContent = `
+    @keyframes lightning-crackle {
+        0% { 
+            transform: scale(1) rotate(0deg); 
+            filter: brightness(1.2); 
+        }
+        50% { 
+            transform: scale(1.1) rotate(5deg); 
+            filter: brightness(1.5); 
+        }
+        100% { 
+            transform: scale(0.9) rotate(-5deg); 
+            filter: brightness(1.8); 
+        }
+    }
+    
+    .projectile.fireball {
+        animation: fireball-flicker 0.2s infinite alternate;
+    }
+    
+    @keyframes fireball-flicker {
+        0% { 
+            transform: scale(1); 
+            filter: brightness(1.2); 
+        }
+        100% { 
+            transform: scale(1.05); 
+            filter: brightness(1.4); 
+        }
+    }
+`;
+document.head.appendChild(lightningStyles);
+
+// Update createEffect to use SpecialMove properties
+function createEffect(x, y, type) {
+    const effect = document.createElement('div');
+    effect.className = `special-effect ${type}`;
+    effect.style.position = 'absolute';
+    effect.style.left = x + 'px';
+    effect.style.top = y + 'px';
+    effect.style.pointerEvents = 'none';
+    effect.style.zIndex = '10';
+
+    const specialMove = Object.values(specialMoves).find(move => move.effect === type);
+    
+    if (specialMove) {
+        effect.style.background = specialMove.color;
+        effect.style.boxShadow = `0 0 20px ${specialMove.color}`;
+        effect.style.width = '40px';
+        effect.style.height = '40px';
+        effect.style.borderRadius = '50%';
+        effect.style.animation = 'effect-expand 0.5s ease-out forwards';
+    }
+
+    document.querySelector('.game-arena').appendChild(effect);
+
+    setTimeout(() => {
+        if (effect.parentNode) {
+            effect.remove();
+        }
+    }, 1000);
+}
+
+// Add new CSS animations for ability stealing
+const abilityStealStyles = document.createElement('style');
+abilityStealStyles.textContent = `
+    @keyframes ability-steal {
+        0% { 
+            transform: scale(0.5); 
+            opacity: 1; 
+            background: radial-gradient(circle, #ff1493, #ff69b4);
+        }
+        50% { 
+            transform: scale(1.5); 
+            opacity: 0.8; 
+            background: radial-gradient(circle, #ff69b4, #ffb6c1);
+        }
+        100% { 
+            transform: scale(2); 
+            opacity: 0; 
+            background: radial-gradient(circle, #ffb6c1, transparent);
+        }
+    }
+    
+    @keyframes steal-pulse {
+        0% { 
+            transform: scale(1); 
+            opacity: 0.9; 
+        }
+        50% { 
+            transform: scale(1.3); 
+            opacity: 0.7; 
+        }
+        100% { 
+            transform: scale(0.8); 
+            opacity: 0; 
+        }
+    }
+    
+    .fighter.has-inhaled::after {
+        content: attr(data-inhaled);
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        font-size: 0.8em;
+        background: rgba(255, 105, 180, 0.8);
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: inhaled-indicator 1s infinite alternate;
+    }
+    
+    @keyframes inhaled-indicator {
+        0% { transform: scale(0.9); opacity: 0.7; }
+        100% { transform: scale(1.1); opacity: 1; }
+    }
+`;
+document.head.appendChild(abilityStealStyles);
+
+// New function to start inhale
+function startInhale(player) {
+    const fighter = fighters[player];
+    if (fighter.character !== 'kirby' || fighter.hasInhaled || fighter.attacking) return;
+    
+            fighter.inhaling = true;
+            fighter.attacking = true;
+    
+    // Create inhale effect
+    createInhaleEffect(player);
+}
+
+// New function to stop inhale
+function stopInhale(player) {
+    const fighter = fighters[player];
+    if (fighter.character !== 'kirby' || !fighter.inhaling) return;
+    
+            fighter.inhaling = false;
+            fighter.attacking = false;
+    
+    // Remove inhale effect
+    removeInhaleEffect();
+}
+
+// New function to create and manage inhale effect
+function createInhaleEffect(player) {
+    const fighter = fighters[player];
+    
+    // Remove existing effect first
+    removeInhaleEffect();
+    
+    // Create new inhale effect
+    const effect = document.createElement('div');
+    effect.className = 'special-effect inhale';
+    effect.id = 'inhale-effect';
+    effect.style.position = 'absolute';
+    effect.style.left = (fighter.x + (fighter.facing * 70)) + 'px';
+    effect.style.top = (fighter.y + 10) + 'px';
+    effect.style.background = 'radial-gradient(ellipse 80px 40px, rgba(255, 105, 180, 0.8), rgba(255, 105, 180, 0.3), transparent)';
+    effect.style.width = '100px';
+    effect.style.height = '60px';
+    effect.style.borderRadius = '50%';
+    effect.style.animation = 'inhale-pulse 0.3s infinite alternate';
+    effect.style.pointerEvents = 'none';
+    effect.style.zIndex = '10';
+    
+    document.querySelector('.game-arena').appendChild(effect);
+    inhaleEffect = effect;
+}
+
+// New function to remove inhale effect
+function removeInhaleEffect() {
+    if (inhaleEffect) {
+        inhaleEffect.remove();
+        inhaleEffect = null;
+    }
+}
+
+function attack(player) {
+    const fighter = fighters[player];
+    fighter.attacking = true;
+
+    const fighterEl = document.getElementById(player === 'p1' ? 'fighter1' : 'fighter2');
+    fighterEl.classList.add('attacking');
+
+            const opponent = player === 'p1' ? 'p2' : 'p1';
+    if (checkCollision(fighter, fighters[opponent], 80)) {
+        hit(opponent, 15);
+    }
+
+    createEffect(fighter.x + (fighter.facing * 40), fighter.y, '#ffff00');
+
+    setTimeout(() => {
+        fighter.attacking = false;
+        fighterEl.classList.remove('attacking');
+    }, 300);
+}
+
+// Update the normalAttack function
+function normalAttack(player) {
+    const fighter = fighters[player];
+    if (fighter.attacking || fighter.stunned) return;
+
+    fighter.attacking = true;
+
+    // If Kirby has inhaled someone, spit them out
+    if (fighter.character === 'kirby' && fighter.hasInhaled) {
+        ejectOpponent(player);
+        setTimeout(() => {
+            fighter.attacking = false;
+        }, 300);
+        return;
+    }
+
+        // Regular attack logic
+        const opponent = player === 'p1' ? 'p2' : 'p1';
+        const opponentFighter = fighters[opponent];
+
+        if (Math.abs(fighter.x - opponentFighter.x) < 50) {
+            hit(opponent, 10);
+            createEffect(opponentFighter.x, opponentFighter.y, 'hit');
+    }
+
+    setTimeout(() => {
+        fighter.attacking = false;
+    }, 300);
+}
+
+// Update the ejectOpponent function to be more reliable
+function ejectOpponent(player) {
+    const fighter = fighters[player];
+    const opponent = player === 'p1' ? 'p2' : 'p1';
+    const opponentFighter = fighters[opponent];
+    
+    
+    // Make opponent visible and active again
+    opponentFighter.visible = true;
+    opponentFighter.stunned = false;
+    
+    // Position opponent next to Kirby
+    opponentFighter.x = fighter.x + (fighter.facing * 80);
+    opponentFighter.y = fighter.y;
+    
+    // Launch opponent away from Kirby
+    opponentFighter.vx = fighter.facing * 12;
+    opponentFighter.vy = -8;
+    
+    // Show opponent element again
+    const opponentElement = document.getElementById(`fighter${opponent === 'p1' ? '1' : '2'}`);
+    if (opponentElement) {
+        opponentElement.style.display = 'flex';
+        opponentElement.style.opacity = '1';
+        opponentElement.style.left = opponentFighter.x + 'px';
+        opponentElement.style.top = opponentFighter.y + 'px';
+    }
+    
+    // Use the stolen ability before ejecting
+    if (fighter.inhaledAbility) {
+        useInhaledAbility(player, fighter.inhaledAbility);
+    }
+    
+    // Deal damage to ejected opponent
+    hit(opponent, 15);
+    
+    // Reset Kirby's state
+    fighter.hasInhaled = false;
+    fighter.inhaledAbility = null;
+    fighter.inhaling = false;
+    fighter.attacking = false;
+    
+    // Create eject effect
+    createEffect(opponentFighter.x, opponentFighter.y, 'spit-out');
+    
+    // Force a position update
+    updatePositions();
+}
+
+function useInhaledAbility(player, ability) {
+    const fighter = fighters[player];
+    const opponent = player === 'p1' ? 'p2' : 'p1';
+    const opponentFighter = fighters[opponent];
+    
+    // Use the ability
+    switch(ability) {
+        case 'fireball':
+            const fireball = {
+                x: fighter.x + (fighter.facing * 30),
+                y: fighter.y,
+                vx: fighter.facing * 8,
+                vy: 0,
+                damage: 10,
+                owner: player,
+                type: 'fireball'
+            };
+            projectiles.push(fireball);
+            createEffect(fighter.x + (fighter.facing * 40), fighter.y, 'fireball');
+            break;
+            
+        case 'thunderbolt':
+            if (Math.abs(fighter.x - opponentFighter.x) < 100) {
+                hit(opponent, 20);
+                createEffect(opponentFighter.x, opponentFighter.y - 100, 'thunder');
+            }
+            break;
+    }
+}
+
+function spitOutOpponent(player) {
+    const fighter = fighters[player];
+    const opponent = player === 'p1' ? 'p2' : 'p1';
+    const opponentFighter = fighters[opponent];
+    
+    // Make opponent visible again
+    opponentFighter.visible = true;
+    opponentFighter.stunned = false;
+    
+    // Launch opponent in the direction Kirby is facing
+    opponentFighter.vx = fighter.facing * 15;
+    opponentFighter.vy = -10;
+    hit(opponent, 15);
+    
+    createEffect(opponentFighter.x, opponentFighter.y, 'spit-out');
+}
+
+function hit(player, damage) {
+    const fighter = fighters[player];
+    fighter.damage += damage;
+
+    const knockbackMultiplier = 0.5 + (fighter.damage / 100);
+    const knockback = damage * knockbackMultiplier;
+    fighter.vx += (player === 'p1' ? -1 : 1) * knockback;
+    fighter.vy -= knockback * 0.5;
+
+    const fighterEl = document.getElementById(player === 'p1' ? 'fighter1' : 'fighter2');
+    fighterEl.classList.add('hit');
+
+    setTimeout(() => {
+        fighterEl.classList.remove('hit');
+    }, 300);
+
+    document.getElementById(player + 'Damage').textContent = fighter.damage + '%';
+}
+
+function checkCollision(obj1, obj2, distance) {
+    const dx = obj1.x - obj2.x;
+    const dy = obj1.y - obj2.y;
+    return Math.sqrt(dx * dx + dy * dy) < distance;
+}
+
+function gameLoop(timestamp) {
+    if (!lastFrameTime) lastFrameTime = timestamp;
+    const deltaTime = timestamp - lastFrameTime;
+    lastFrameTime = timestamp;
+    
+    // Cap the frame rate to prevent excessive speed
+    if (deltaTime < 16) { // Approximately 60 FPS
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+    
+    handleMovement();
+    updateProjectiles(); // ADD THIS LINE
+    updatePositions();
+    requestAnimationFrame(gameLoop);
+}
+
+// Start the game loop
+gameLoop();
+
+function updatePositions() {
+    if (!gameState.gameRunning) return;
+
+    // Update Kirby's inhale mechanics
+    for (const player of ['p1', 'p2']) {
+        const fighter = fighters[player];
+        if (fighter.character === 'kirby') {
+            
+            // Handle active inhaling
+            if (fighter.inhaling && !fighter.hasInhaled) {
+                // Update inhale effect position
+                if (inhaleEffect) {
+                    inhaleEffect.style.left = (fighter.x + (fighter.facing * 70)) + 'px';
+                    inhaleEffect.style.top = (fighter.y + 10) + 'px';
+                }
+
+                const opponent = player === 'p1' ? 'p2' : 'p1';
+                const opponentFighter = fighters[opponent];
+                
+                // Check if opponent is in inhale range
+                const inhaleRange = 120;
+                const distance = Math.abs(fighter.x - opponentFighter.x);
+                const verticalDistance = Math.abs(fighter.y - opponentFighter.y);
+                
+                
+                if (distance < inhaleRange && verticalDistance < 80) {
+                    // Pull opponent towards Kirby
+                    const pullStrength = 0.8;
+                    const direction = fighter.x > opponentFighter.x ? 1 : -1;
+                    opponentFighter.vx += direction * pullStrength;
+                    
+                    // Check if close enough to inhale
+                    if (distance < 60 && verticalDistance < 50) {
+                        // Successfully inhale opponent
+                        fighter.hasInhaled = true;
+                        fighter.inhaledAbility = characters[opponentFighter.character].specialMove;
+                        fighter.inhaling = false;
+                        
+                        // Hide opponent immediately
+                opponentFighter.stunned = true;
+                opponentFighter.visible = false;
+                opponentFighter.attacking = false;
+                opponentFighter.inhaling = false;
+                        
+                        const opponentElement = document.getElementById(`fighter${opponent === 'p1' ? '1' : '2'}`);
+                        if (opponentElement) {
+                            opponentElement.style.display = 'none';
+                        }
+                        
+                        // Remove inhale effect and create swallow effect
+                        removeInhaleEffect();
+                        createEffect(fighter.x, fighter.y, 'swallow');
+                    }
+                    }
+                }
+                
+            // Handle inhaled opponent positioning
+            if (fighter.hasInhaled) {
+                const opponent = player === 'p1' ? 'p2' : 'p1';
+                const opponentFighter = fighters[opponent];
+                
+                // Keep opponent completely inside Kirby
+                opponentFighter.x = fighter.x;
+                opponentFighter.y = fighter.y;
+                opponentFighter.vx = 0;
+                opponentFighter.vy = 0;
+                        opponentFighter.stunned = true;
+                        opponentFighter.visible = false;
+                        opponentFighter.attacking = false;
+                        opponentFighter.inhaling = false;
+                
+                // Keep opponent hidden
+                const opponentElement = document.getElementById(`fighter${opponent === 'p1' ? '1' : '2'}`);
+                if (opponentElement) {
+                    opponentElement.style.display = 'none';
+                }
+                
+                // Add visual indicator for inhaled opponent with correct emoji
+                const fighterElement = document.getElementById(`fighter${player === 'p1' ? '1' : '2'}`);
+                if (fighterElement) {
+                    const opponentChar = characters[opponentFighter.character];
+                    fighterElement.setAttribute('data-inhaled', opponentChar.emoji);
+                    fighterElement.classList.add('has-inhaled');
+                }
+            } else {
+                // Remove visual indicator if not inhaling
+                const fighterElement = document.getElementById(`fighter${player === 'p1' ? '1' : '2'}`);
+                if (fighterElement) {
+                    fighterElement.removeAttribute('data-inhaled');
+                    fighterElement.classList.remove('has-inhaled');
+                }
+            }
+        }
+    }
+
+    // Apply gravity and movement
+    const gravity = 0.8;
+    for (const fighter of Object.values(fighters)) {
+        // Skip movement updates for inhaled fighters
+        if (!fighter.visible && fighter.stunned) continue;
+        
+        fighter.vy += gravity;
+        
+        // Update position
+        fighter.x += fighter.vx;
+        fighter.y += fighter.vy;
+        
+        // Check platform collisions
+        let onPlatform = false;
+        const platforms = document.querySelectorAll('.platform');
+        platforms.forEach(platform => {
+            const platformRect = platform.getBoundingClientRect();
+            const arenaRect = document.querySelector('.game-arena').getBoundingClientRect();
+            
+            const platformLeft = platformRect.left - arenaRect.left;
+            const platformTop = platformRect.top - arenaRect.top;
+            const platformWidth = platformRect.width;
+            
+            if (fighter.y + 80 > platformTop && 
+                fighter.y < platformTop + 30 &&
+                fighter.x + 40 > platformLeft && 
+                fighter.x < platformLeft + platformWidth) {
+                if (fighter.vy > 0) {
+                    fighter.y = platformTop - 80;
+                    fighter.vy = 0;
+                    fighter.canJump = true;
+                    fighter.jumpsLeft = fighter.maxJumps;
+                    onPlatform = true;
+                }
+            }
+        });
+        
+        // Check arena boundaries for death
+        const arenaRect = document.querySelector('.game-arena').getBoundingClientRect();
+        
+        if (fighter.x <= 0 || 
+            fighter.x + 40 >= arenaRect.width || 
+            fighter.y <= 0 || 
+            fighter.y + 80 >= arenaRect.height) {
+            if (fighter === fighters.p1) {
+                endGame('CPU wins!');
+            } else {
+                endGame('Player wins!');
+            }
+            return;
+        }
+        
+        // Update fighter element position (only for visible fighters)
+        const fighterElement = document.getElementById(`fighter${fighter === fighters.p1 ? '1' : '2'}`);
+        if (fighterElement && fighter.visible !== false) {
+            fighterElement.style.left = fighter.x + 'px';
+            fighterElement.style.top = fighter.y + 'px';
+            fighterElement.style.transform = `scaleX(${fighter.facing})`;
+            fighterElement.style.display = 'flex';
+            fighterElement.style.opacity = '1';
+        }
+    }
+}
+
+function checkCollisions() {
+    // Check for player collisions
+    if (checkCollision(fighters.p1, fighters.p2, 60)) {
+        // Push players apart
+        const dx = fighters.p1.x - fighters.p2.x;
+        const pushForce = 2;
+        
+        if (dx > 0) {
+            fighters.p1.vx += pushForce;
+            fighters.p2.vx -= pushForce;
+        } else {
+            fighters.p1.vx -= pushForce;
+            fighters.p2.vx += pushForce;
+        }
+    }
+}
+
+// Make sure this function exists to update the visual elements
+function updateVisuals() {
+    // Update fighter positions
+    const fighter1El = document.getElementById('fighter1');
+    const fighter2El = document.getElementById('fighter2');
+    
+    fighter1El.style.left = fighters.p1.x + 'px';
+    fighter1El.style.top = fighters.p1.y + 'px';
+    fighter2El.style.left = fighters.p2.x + 'px';
+    fighter2El.style.top = fighters.p2.y + 'px';
+    
+    // Update other visual elements as needed
+}
+
+// Update handleMovement to only handle player 1 (since p2 is CPU)
+function handleMovement() {
+    if (!gameState.gameRunning) return;
+
+    // Player 1 controls (WASD)
+    if (keys['a']) {
+        fighters.p1.vx = -5;
+        fighters.p1.facing = -1;
+    } else if (keys['d']) {
+        fighters.p1.vx = 5;
+        fighters.p1.facing = 1;
+    } else {
+        fighters.p1.vx = 0;
+    }
+
+    if (keys['w'] && fighters.p1.canJump) {
+        fighters.p1.vy = -15;
+        fighters.p1.canJump = false;
+        createEffect(fighters.p1.x, fighters.p1.y + 30, 'jump');
+    }
+
+    if (keys['s']) {
+        fighters.p1.vy = 5; // Allow phasing through platforms
+    }
+
+    // CPU controls (simplified AI)
+    const cpu = fighters.p2;
+    const player = fighters.p1;
+    
+    // Only move CPU if not inhaled
+    if (!player.hasInhaled) {
+        // Basic movement towards player
+        if (Math.abs(cpu.x - player.x) > 50) {
+            cpu.vx = cpu.x > player.x ? -3 : 3;
+            cpu.facing = cpu.vx > 0 ? 1 : -1;
+        } else {
+            cpu.vx = 0;
+        }
+
+        // Jump occasionally
+        if (cpu.canJump && Math.random() < 0.02) {
+            cpu.vy = -15;
+            cpu.canJump = false;
+            createEffect(cpu.x, cpu.y + 30, 'jump');
+        }
+
+        // Attack when close
+        if (Math.abs(cpu.x - player.x) < 60 && !cpu.attacking) {
+            normalAttack('p2');
+        }
+    } else {
+        // If inhaled, stop all movement
+        cpu.vx = 0;
+        cpu.vy = 0;
+    }
+}
+
+function endGame(message) {
+    gameState.gameRunning = false;
+    
+    // Show game over screen
+    const gameOver = document.getElementById('gameOver');
+    const winner = document.getElementById('winner');
+    const winMessage = document.getElementById('winMessage');
+    
+    gameOver.style.display = 'block';
+    winner.textContent = message;
+    winMessage.textContent = message === 'Player wins!' ? 
+        'You defeated the CPU!' : 
+        'The CPU defeated you!';
+    
+    // Add some visual effects
+    gameOver.style.animation = 'gameOverAppear 0.5s ease-out';
+    winner.style.color = message === 'Player wins!' ? '#4ade80' : '#ef4444';
+}
+
+// Add CSS animations for inhale effects
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes inhale-pulse {
+        0% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.2); opacity: 0.6; }
+        100% { transform: scale(1); opacity: 0.8; }
+    }
+    
+    @keyframes being-inhaled {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.8); }
+        100% { transform: scale(1); }
+    }
+    
+    @keyframes gameOverAppear {
+        0% { transform: scale(0.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+`;
+document.head.appendChild(style);
+
+// Update the resetGame function to properly reset game speed
+function resetGame() {
+    // Reset game speed
+    gameSpeed = 1;
+    lastFrameTime = 0;
+    
+    // Reset game state
+    gameState.screen = 'select';
+    gameState.gameRunning = false;
+    gameState.players.p1.character = null;
+    gameState.players.p1.selected = false;
+    gameState.players.p2.character = null;
+    gameState.players.p2.selected = false;
+    gameState.currentPlayer = 1;
+    gameState.p1Health = 100;
+    gameState.p2Health = 100;
+    gameState.p1Ability = null;
+    gameState.p2Ability = null;
+    
+    // Reset fighters
+    fighters.p1.x = 300;
+    fighters.p1.y = 300;
+    fighters.p1.vx = 0;
+    fighters.p1.vy = 0;
+    fighters.p1.facing = 1;
+    fighters.p1.attacking = false;
+    fighters.p1.stunned = false;
+    fighters.p1.inhaling = false;
+    fighters.p1.hasInhaled = false;
+    fighters.p1.inhaledAbility = null;
+    fighters.p1.canJump = true;
+    fighters.p1.visible = true;
+    fighters.p1.damage = 0;
+    
+    fighters.p2.x = 500;
+    fighters.p2.y = 300;
+    fighters.p2.vx = 0;
+    fighters.p2.vy = 0;
+    fighters.p2.facing = -1;
+    fighters.p2.attacking = false;
+    fighters.p2.stunned = false;
+    fighters.p2.inhaling = false;
+    fighters.p2.hasInhaled = false;
+    fighters.p2.inhaledAbility = null;
+    fighters.p2.canJump = true;
+    fighters.p2.visible = true;
+    fighters.p2.damage = 0;
+    
+    // Clear projectiles and effects
+    projectiles = [];
+    if (inhaleEffect) {
+        inhaleEffect.remove();
+        inhaleEffect = null;
+    }
+    
+    // Reset visual elements
+    const fighter1El = document.getElementById('fighter1');
+    const fighter2El = document.getElementById('fighter2');
+    
+    if (fighter1El) {
+        fighter1El.style.display = 'flex';
+        fighter1El.style.opacity = '1';
+        fighter1El.style.left = fighters.p1.x + 'px';
+        fighter1El.style.top = fighters.p1.y + 'px';
+        fighter1El.style.transform = `scaleX(${fighters.p1.facing})`;
+        fighter1El.style.display = 'flex';
+        fighter1El.style.opacity = '1';
+    }
+    
+    if (fighter2El) {
+        fighter2El.style.display = 'flex';
+        fighter2El.style.opacity = '1';
+        fighter2El.style.left = fighters.p2.x + 'px';
+        fighter2El.style.top = fighters.p2.y + 'px';
+        fighter2El.style.transform = `scaleX(${fighters.p2.facing})`;
+        fighter2El.style.display = 'flex';
+        fighter2El.style.opacity = '1';
+    }
+    
+    // Update health and damage displays
+    document.getElementById('p1Damage').textContent = '0%';
+    document.getElementById('p2Damage').textContent = '0%';
+    document.getElementById('p1Health').style.width = '100%';
+    document.getElementById('p2Health').style.width = '100%';
+    
+    // Hide game over screen and game screen
+    const gameOver = document.getElementById('gameOver');
+    const gameScreen = document.getElementById('gameScreen');
+    const characterSelect = document.getElementById('characterSelect');
+    
+    if (gameOver) gameOver.style.display = 'none';
+    if (gameScreen) gameScreen.style.display = 'none';
+    if (characterSelect) characterSelect.style.display = 'flex';
+    
+    // Reset character selection UI
+    document.querySelectorAll('.character-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    document.getElementById('p1Selected').textContent = '?';
+    document.getElementById('p2Selected').textContent = '?';
+    document.getElementById('startGame').disabled = true;
+    
+    // Stop the game loop
+    gameState.gameRunning = false;
+}
+
+function updateHealthBars() {
+    // Implementation of updateHealthBars function
+}
+
+// Add event listener for play again button
+document.addEventListener('DOMContentLoaded', function() {
+    const playAgainBtn = document.querySelector('.restart-button');
+    if (playAgainBtn) {
+        playAgainBtn.addEventListener('click', resetGame);
+    }
+});
+
+// Enhanced function to steal ability and transform Kirby
+function stealAbilityAndTransform(player) {
+    const fighter = fighters[player];
+    const opponent = player === 'p1' ? 'p2' : 'p1';
+    const opponentFighter = fighters[opponent];
+    
+    if (!fighter.hasInhaled || !fighter.inhaledAbility) {
+        console.log('No ability to steal!');
+        return;
+    }
+    
+    // Store the stolen ability permanently
+    const stolenAbility = fighter.inhaledAbility;
+    const opponentCharacter = opponentFighter.character;
+    
+    // Transform Kirby - change his special move to the stolen one
+    characters.kirby.specialMove = stolenAbility;
+    
+    // Create dramatic transformation effect
+    createTransformationEffect(fighter.x, fighter.y, stolenAbility, opponentCharacter);
+    
+    // Show visual feedback of transformation
+    showAbilityStealMessage(player, stolenAbility, opponentCharacter);
+    
+    // Make opponent visible and active again
+    opponentFighter.visible = true;
+    opponentFighter.stunned = false;
+    
+    // Position opponent right next to Kirby
+    opponentFighter.x = fighter.x + (fighter.facing * 80);
+    opponentFighter.y = fighter.y;
+    
+    // Give opponent minimal knockback
+    opponentFighter.vx = fighter.facing * 3;
+    opponentFighter.vy = -3;
+    
+    // Show opponent element again
+    const opponentElement = document.getElementById(`fighter${opponent === 'p1' ? '1' : '2'}`);
+    if (opponentElement) {
+        opponentElement.style.display = 'flex';
+        opponentElement.style.opacity = '1';
+        opponentElement.style.left = opponentFighter.x + 'px';
+        opponentElement.style.top = opponentFighter.y + 'px';
+    }
+    
+    // Reset Kirby's inhale state
+    fighter.hasInhaled = false;
+    fighter.inhaledAbility = null;
+    fighter.inhaling = false;
+    fighter.attacking = false;
+    
+    // Remove visual indicators
+    const fighterElement = document.getElementById(`fighter${player === 'p1' ? '1' : '2'}`);
+    if (fighterElement) {
+        fighterElement.removeAttribute('data-inhaled');
+        fighterElement.classList.remove('has-inhaled');
+        
+        // Add transformation visual effect to Kirby
+        fighterElement.classList.add('transformed');
+        fighterElement.setAttribute('data-stolen-ability', stolenAbility);
+        
+        // Remove transformation effect after a few seconds
+        setTimeout(() => {
+            fighterElement.classList.remove('transformed');
+        }, 3000);
+    }
+    
+    // Update Kirby's appearance or add ability indicator
+    updateKirbyAbilityDisplay(player, stolenAbility, opponentCharacter);
+    
+    console.log(`Kirby stole ${stolenAbility} from ${opponentCharacter}!`);
+    
+    // Force position update
+    updatePositions();
+}
+
+// Create dramatic transformation effect
+function createTransformationEffect(x, y, ability, characterName) {
+    // Main transformation burst
+    const transformEffect = document.createElement('div');
+    transformEffect.className = 'transformation-effect';
+    transformEffect.style.position = 'absolute';
+    transformEffect.style.left = (x - 50) + 'px';
+    transformEffect.style.top = (y - 50) + 'px';
+    transformEffect.style.width = '100px';
+    transformEffect.style.height = '100px';
+    transformEffect.style.background = 'radial-gradient(circle, #ff1493, #ff69b4, #ffb6c1, transparent)';
+    transformEffect.style.borderRadius = '50%';
+    transformEffect.style.animation = 'transformation-burst 1s ease-out forwards';
+    transformEffect.style.pointerEvents = 'none';
+    transformEffect.style.zIndex = '15';
+    
+    document.querySelector('.game-arena').appendChild(transformEffect);
+    
+    // Sparkle effects
+    for (let i = 0; i < 8; i++) {
+        setTimeout(() => {
+            createSparkle(x + (Math.random() - 0.5) * 100, y + (Math.random() - 0.5) * 100);
+        }, i * 100);
+    }
+    
+    // Remove effect after animation
+    setTimeout(() => {
+        if (transformEffect.parentNode) {
+            transformEffect.remove();
+        }
+    }, 1000);
+}
+
+// Create sparkle effects
+function createSparkle(x, y) {
+    const sparkle = document.createElement('div');
+    sparkle.style.position = 'absolute';
+    sparkle.style.left = x + 'px';
+    sparkle.style.top = y + 'px';
+    sparkle.style.width = '6px';
+    sparkle.style.height = '6px';
+    sparkle.style.background = '#ffffff';
+    sparkle.style.borderRadius = '50%';
+    sparkle.style.boxShadow = '0 0 10px #ffffff';
+    sparkle.style.animation = 'sparkle-fade 0.8s ease-out forwards';
+    sparkle.style.pointerEvents = 'none';
+    sparkle.style.zIndex = '12';
+    
+    document.querySelector('.game-arena').appendChild(sparkle);
+    
+    setTimeout(() => {
+        if (sparkle.parentNode) {
+            sparkle.remove();
+        }
+    }, 800);
+}
+
+// Show ability steal message
+function showAbilityStealMessage(player, ability, characterName) {
+    const message = document.createElement('div');
+    message.className = 'ability-steal-message';
+    message.style.position = 'absolute';
+    message.style.top = '20%';
+    message.style.left = '50%';
+    message.style.transform = 'translate(-50%, -50%)';
+    message.style.fontSize = '2rem';
+    message.style.color = '#ff1493';
+    message.style.textShadow = '2px 2px 0px #000';
+    message.style.fontWeight = 'bold';
+    message.style.zIndex = '20';
+    message.style.animation = 'message-popup 2s ease-out forwards';
+    message.style.pointerEvents = 'none';
+    
+    const abilityName = ability.charAt(0).toUpperCase() + ability.slice(1);
+    const charName = characterName.charAt(0).toUpperCase() + characterName.slice(1);
+    message.textContent = `Kirby learned ${abilityName}!`;
+    
+    document.querySelector('.game-arena').appendChild(message);
+    
+    setTimeout(() => {
+        if (message.parentNode) {
+            message.remove();
+        }
+    }, 2000);
+}
+
+// Update Kirby's ability display
+function updateKirbyAbilityDisplay(player, ability, characterName) {
+    const fighterElement = document.getElementById(`fighter${player === 'p1' ? '1' : '2'}`);
+    if (!fighterElement) return;
+    
+    // Remove any existing ability indicator
+    const existingIndicator = fighterElement.querySelector('.ability-indicator');
+    if (existingIndicator) {
+        existingIndicator.remove();
+    }
+    
+    // Add new ability indicator
+    const indicator = document.createElement('div');
+    indicator.className = 'ability-indicator';
+    indicator.style.position = 'absolute';
+    indicator.style.top = '-15px';
+    indicator.style.right = '-15px';
+    indicator.style.width = '25px';
+    indicator.style.height = '25px';
+    indicator.style.borderRadius = '50%';
+    indicator.style.display = 'flex';
+    indicator.style.alignItems = 'center';
+    indicator.style.justifyContent = 'center';
+    indicator.style.fontSize = '12px';
+    indicator.style.fontWeight = 'bold';
+    indicator.style.zIndex = '10';
+    indicator.style.animation = 'ability-glow 2s infinite alternate';
+    
+    // Set indicator style based on stolen ability
+    switch(ability) {
+        case 'fireball':
+            indicator.style.background = 'linear-gradient(45deg, #ff4500, #ff0000)';
+            indicator.style.boxShadow = '0 0 10px #ff0000';
+            indicator.textContent = '🔥';
+            break;
+        case 'thunderbolt':
+            indicator.style.background = 'linear-gradient(45deg, #ffff00, #ffd700)';
+            indicator.style.boxShadow = '0 0 10px #ffff00';
+            indicator.textContent = '⚡';
+            break;
+        default:
+            indicator.style.background = 'linear-gradient(45deg, #ff1493, #ff69b4)';
+            indicator.style.boxShadow = '0 0 10px #ff1493';
+            indicator.textContent = '✨';
+    }
+    
+    fighterElement.appendChild(indicator);
+}
+
+// Enhanced specialAttack function to use stolen abilities
+function enhancedSpecialAttack(player) {
+    const fighter = fighters[player];
+    const character = fighter.character;
+
+    if (fighter.stunned || fighter.attacking) return;
+
+    fighter.attacking = true;
+    
+    // For Kirby, check if he has a stolen ability
+    let currentSpecialMove;
+    if (character === 'kirby' && characters.kirby.specialMove !== 'inhale') {
+        currentSpecialMove = characters.kirby.specialMove;
+    } else {
+        currentSpecialMove = characters[character].specialMove;
+    }
+    
+    const specialMove = specialMoves[currentSpecialMove];
+
+    // Create projectile based on current ability
+    if (currentSpecialMove === 'fireball' || currentSpecialMove === 'thunderbolt') {
+        const projectile = {
+            x: fighter.x + (fighter.facing * 50),
+            y: fighter.y + 25,
+            vx: fighter.facing * 12,
+            vy: currentSpecialMove === 'thunderbolt' ? -1 : 0,
+            damage: specialMove.damage,
+            owner: player,
+            type: currentSpecialMove,
+            bounces: 0,
+            maxBounces: currentSpecialMove === 'thunderbolt' ? 3 : 0,
+            element: createProjectileElement(specialMove, currentSpecialMove)
+        };
+        
+        if (projectile.element) {
+            projectile.element.style.left = projectile.x + 'px';
+            projectile.element.style.top = projectile.y + 'px';
+            projectile.element.style.display = 'block';
+        }
+        
+        projectiles.push(projectile);
+        createEffect(fighter.x + (fighter.facing * 40), fighter.y, specialMove.effect);
+        
+        // Show special message for Kirby using stolen ability
+        if (character === 'kirby' && currentSpecialMove !== 'inhale') {
+            showKirbyUsingAbility(player, currentSpecialMove);
+        }
+    }
+
+    setTimeout(() => {
+        fighter.attacking = false;
+    }, 500);
+}
+
+// Show message when Kirby uses stolen ability
+function showKirbyUsingAbility(player, ability) {
+    const message = document.createElement('div');
+    message.className = 'kirby-ability-use';
+    message.style.position = 'absolute';
+    message.style.top = '30%';
+    message.style.left = '50%';
+    message.style.transform = 'translate(-50%, -50%)';
+    message.style.fontSize = '1.5rem';
+    message.style.color = '#ff69b4';
+    message.style.textShadow = '1px 1px 0px #000';
+    message.style.fontWeight = 'bold';
+    message.style.zIndex = '18';
+    message.style.animation = 'quick-popup 1s ease-out forwards';
+    message.style.pointerEvents = 'none';
+    
+    const abilityName = ability.charAt(0).toUpperCase() + ability.slice(1);
+    message.textContent = `Copy Ability: ${abilityName}!`;
+    
+    document.querySelector('.game-arena').appendChild(message);
+    
+    setTimeout(() => {
+        if (message.parentNode) {
+            message.remove();
+        }
+    }, 1000);
+}
+
+// Add CSS animations for all the new effects
+const kirbyAbilityStyles = document.createElement('style');
+kirbyAbilityStyles.textContent = `
+    @keyframes transformation-burst {
+        0% { 
+            transform: scale(0.5) rotate(0deg); 
+            opacity: 1; 
+        }
+        50% { 
+            transform: scale(2) rotate(180deg); 
+            opacity: 0.8; 
+        }
+        100% { 
+            transform: scale(3) rotate(360deg); 
+            opacity: 0; 
+        }
+    }
+    
+    @keyframes sparkle-fade {
+        0% { 
+            transform: scale(0) rotate(0deg); 
+            opacity: 1; 
+        }
+        50% { 
+            transform: scale(1.5) rotate(180deg); 
+            opacity: 0.8; 
+        }
+        100% { 
+            transform: scale(0) rotate(360deg); 
+            opacity: 0; 
+        }
+    }
+    
+    @keyframes message-popup {
+        0% { 
+            transform: translate(-50%, -50%) scale(0.5); 
+            opacity: 0; 
+        }
+        20% { 
+            transform: translate(-50%, -50%) scale(1.2); 
+            opacity: 1; 
+        }
+        80% { 
+            transform: translate(-50%, -50%) scale(1); 
+            opacity: 1; 
+        }
+        100% { 
+            transform: translate(-50%, -50%) scale(0.8); 
+            opacity: 0; 
+        }
+    }
+    
+    @keyframes quick-popup {
+        0% { 
+            transform: translate(-50%, -50%) scale(0.8); 
+            opacity: 0; 
+        }
+        30% { 
+            transform: translate(-50%, -50%) scale(1.1); 
+            opacity: 1; 
+        }
+        70% { 
+            transform: translate(-50%, -50%) scale(1); 
+            opacity: 1; 
+        }
+        100% { 
+            transform: translate(-50%, -50%) scale(0.9); 
+            opacity: 0; 
+        }
+    }
+    
+    @keyframes ability-glow {
+        0% { 
+            transform: scale(1); 
+            filter: brightness(1); 
+        }
+        100% { 
+            transform: scale(1.1); 
+            filter: brightness(1.3); 
+        }
+    }
+    
+    .fighter.transformed {
+        animation: kirby-transform 0.5s ease-in-out;
+        filter: brightness(1.2);
+    }
+    
+    @keyframes kirby-transform {
+        0% { transform: scale(1) rotate(0deg); }
+        25% { transform: scale(1.2) rotate(5deg); }
+        50% { transform: scale(0.9) rotate(-5deg); }
+        75% { transform: scale(1.1) rotate(3deg); }
+        100% { transform: scale(1) rotate(0deg); }
+    }
+    
+    .ability-indicator {
+        pointer-events: none;
+        user-select: none;
+    }
+`;
+document.head.appendChild(kirbyAbilityStyles);
+
+// Replace the original specialAttack function with the enhanced version
+window.specialAttack = enhancedSpecialAttack;
+
+// Add touch/click event handlers for on-screen controls
+function setupOnScreenControls() {
+    // Movement buttons
+    const upBtn = document.getElementById('upBtn');
+    const leftBtn = document.getElementById('leftBtn');
+    const rightBtn = document.getElementById('rightBtn');
+    const downBtn = document.getElementById('downBtn');
+    
+    // Action buttons
+    const attackBtn = document.getElementById('attackBtn');
+    const specialBtn = document.getElementById('specialBtn');
+
+    // Movement button handlers
+    function handleMovementButton(button, key, isPressed) {
+        button.addEventListener('mousedown', () => keys[key] = true);
+        button.addEventListener('touchstart', () => keys[key] = true);
+        button.addEventListener('mouseup', () => keys[key] = false);
+        button.addEventListener('touchend', () => keys[key] = false);
+        button.addEventListener('mouseleave', () => keys[key] = false);
+    }
+
+    // Set up movement buttons
+    handleMovementButton(upBtn, 'w', true);
+    handleMovementButton(leftBtn, 'a', true);
+    handleMovementButton(rightBtn, 'd', true);
+    handleMovementButton(downBtn, 's', true);
+
+    // Action button handlers
+    function handleActionButton(button, key) {
+        button.addEventListener('mousedown', () => {
+            keys[key] = true;
+            if (key === 'f') {
+                const p1Fighter = fighters.p1;
+                if (p1Fighter.character === 'kirby' && p1Fighter.hasInhaled) {
+                    spitOutWithoutStealing('p1');
+                } else if (!p1Fighter.attacking && !p1Fighter.stunned) {
+                    attack('p1');
+                }
+            } else if (key === 'g') {
+                keys.gHeld = true;
+                const p1Fighter = fighters.p1;
+                if (p1Fighter.character === 'kirby') {
+                    if (p1Fighter.hasInhaled) {
+                        stealAbilityAndTransform('p1');
+                    } else if (!p1Fighter.attacking) {
+                        if (characters.kirby.specialMove !== 'inhale') {
+                            enhancedSpecialAttack('p1');
+                        } else {
+                            startInhale('p1');
+                        }
+                    }
+                } else {
+                    specialAttack('p1');
+                }
+            }
+        });
+
+        button.addEventListener('mouseup', () => {
+            keys[key] = false;
+            if (key === 'g') keys.gHeld = false;
+        });
+
+        button.addEventListener('touchstart', () => {
+            keys[key] = true;
+            if (key === 'f') {
+                const p1Fighter = fighters.p1;
+                if (p1Fighter.character === 'kirby' && p1Fighter.hasInhaled) {
+                    spitOutWithoutStealing('p1');
+                } else if (!p1Fighter.attacking && !p1Fighter.stunned) {
+                    attack('p1');
+                }
+            } else if (key === 'g') {
+                keys.gHeld = true;
+                const p1Fighter = fighters.p1;
+                if (p1Fighter.character === 'kirby') {
+                    if (p1Fighter.hasInhaled) {
+                        stealAbilityAndTransform('p1');
+                    } else if (!p1Fighter.attacking) {
+                        if (characters.kirby.specialMove !== 'inhale') {
+                            enhancedSpecialAttack('p1');
+                        } else {
+                            startInhale('p1');
+                        }
+                    }
+                } else {
+                    specialAttack('p1');
+                }
+            }
+        });
+
+        button.addEventListener('touchend', () => {
+            keys[key] = false;
+            if (key === 'g') keys.gHeld = false;
+        });
+    }
+
+    // Set up action buttons
+    handleActionButton(attackBtn, 'f');
+    handleActionButton(specialBtn, 'g');
+}
+
+
+</script>
+</body>
+</html>
